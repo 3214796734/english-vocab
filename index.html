@@ -98,6 +98,7 @@ body{
 .badge-high{background:#fff5f5;color:#e53e3e;}
 .badge-mid{background:#fffaf0;color:#dd6b20;}
 .badge-low{background:#f0fff4;color:#38a169;}
+.badge-count{background:#fffbea;color:#975a16;}
 
 .empty{text-align:center;color:rgba(255,255,255,0.8);padding:60px 20px;}
 .empty-icon{font-size:3rem;margin-bottom:12px;}
@@ -410,6 +411,9 @@ function render(page) {
       else if (w.freq === 'mid') freqBadge = '<span class="badge badge-mid">中频</span>';
       else freqBadge = '<span class="badge badge-low">低频</span>';
 
+      var examCount = w.examCount || 0;
+      var countBadge = examCount ? '<span class="badge badge-count" title="历年真题出现次数">📋 ' + examCount + '次</span>' : '';
+
       var simple = w.simple || getSimple(w.en);
       var simpleHtml = simple ? '<div class="card-simple">' + simple + '</div>' : '';
 
@@ -424,7 +428,7 @@ function render(page) {
             '<button class="' + speakClass + '" onclick="speak(event,\'' + safeEn + '\')" title="试听发音">' + speakIcon + '</button>' +
             '<div class="card-en">' + w.en + '</div>' +
           '</div>' +
-          '<div class="badges">' + levelBadge + freqBadge + '</div>' +
+          '<div class="badges">' + levelBadge + freqBadge + countBadge + '</div>' +
         '</div>' +
         '<div class="card-zh">' + w.zh + '</div>' +
         simpleHtml +
