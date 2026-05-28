@@ -385,11 +385,10 @@ function showStudyWord() {
   document.getElementById('studyProgress').textContent = (studyIndex+1) + ' / ' + studyWords.length;
   document.getElementById('prevBtn').disabled = studyIndex === 0;
   document.getElementById('nextBtn').disabled = studyIndex >= studyWords.length - 1;
-  // Auto-speak
-  speechSynth.cancel();
-  var u = new SpeechSynthesisUtterance(w.en);
-  u.lang = 'en-US'; u.rate = 0.85;
-  speechSynth.speak(u);
+  // Don't auto-speak — mobile requires user gesture
+  var btn = document.getElementById('studySpeakBtn');
+  btn.classList.remove('speaking');
+  btn.textContent = '🔈';
 }
 
 function nextWord() {
@@ -405,6 +404,19 @@ function speakStudy() {
   speechSynth.cancel();
   var u = new SpeechSynthesisUtterance(w.en);
   u.lang = 'en-US'; u.rate = 0.85;
+  u.onstart = function(){
+    var btn = document.getElementById('studySpeakBtn');
+    btn.classList.add('speaking'); btn.textContent = '🔊';
+  };
+  u.onend = function(){
+    var btn = document.getElementById('studySpeakBtn');
+    btn.classList.remove('speaking'); btn.textContent = '🔈';
+  };
+  u.onerror = function(){
+    // Mobile may fail silently — show fallback
+    var btn = document.getElementById('studySpeakBtn');
+    btn.classList.remove('speaking'); btn.textContent = '🔈';
+  };
   speechSynth.speak(u);
 }
 
