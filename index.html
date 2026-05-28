@@ -69,17 +69,24 @@ body{
   display:flex;align-items:center;gap:12px;
   background:rgba(255,255,255,0.95);border-radius:10px;
   padding:10px 16px;cursor:pointer;transition:all 0.15s;
+  user-select:none;
 }
 .word-row:hover{background:#fff;transform:translateX(4px);box-shadow:0 2px 12px rgba(0,0,0,0.1);}
-.word-row .row-en{font-weight:700;color:#2d3748;font-size:1rem;min-width:120px;}
-.word-row .row-zh{color:#4a5568;font-size:0.9rem;flex:1;}
+.word-row .row-en{
+  font-weight:700;color:#2d3748;font-size:1rem;min-width:110px;max-width:180px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;
+}
+.word-row .row-zh{
+  color:#4a5568;font-size:0.9rem;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 .word-row .row-speak{
-  width:26px;height:26px;border:none;background:#ebf4ff;color:#3182ce;
-  border-radius:50%;cursor:pointer;font-size:0.75rem;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border:none;background:#ebf4ff;color:#3182ce;
+  border-radius:50%;cursor:pointer;font-size:0.8rem;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;z-index:2;
 }
 .word-row .row-speak:hover{background:#3182ce;color:#fff;}
-.word-row .row-badges{display:flex;gap:4px;flex-shrink:0;}
+.word-row .row-badges{display:flex;gap:4px;flex-shrink:0;white-space:nowrap;}
 .word-row .badge{font-size:0.68rem;padding:2px 8px;border-radius:12px;font-weight:600;white-space:nowrap;}
 .badge-cet4{background:#ebf4ff;color:#3182ce;}
 .badge-cet6{background:#faf5ff;color:#805ad5;}
@@ -145,9 +152,9 @@ body{
 @media(max-width:600px){
   .tab{padding:10px 16px;font-size:0.85rem;}
   .container{padding:12px;}
-  .word-row{gap:8px;padding:8px 12px;}
-  .word-row .row-en{min-width:90px;font-size:0.9rem;}
-  .word-row .row-zh{font-size:0.8rem;}
+  .word-row{gap:6px;padding:8px 10px;}
+  .word-row .row-en{min-width:80px;max-width:120px;font-size:0.85rem;}
+  .word-row .row-zh{font-size:0.78rem;}
   .study-en{font-size:1.6rem;}
   .study-card{padding:28px 24px;}
 }
@@ -211,7 +218,7 @@ body{
 
 <div class="footer">点击词汇进入学习模式 · 键盘 ← → 翻页 · Esc 退出</div>
 
-<script src="data.js?v=2"></script>
+<script src="data.js?v=3"></script>
 <script>
 var currentTab = 'cet4';
 var currentFreq = 'all';
