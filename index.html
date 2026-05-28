@@ -218,7 +218,8 @@ body{
 
 <div class="footer">点击词汇进入学习模式 · 键盘 ← → 翻页 · Esc 退出</div>
 
-<script src="data.js?v=3"></script>
+<audio id="ttsAudio" style="display:none" preload="auto"></audio>
+<script src="data.js?v=4"></script>
 <script>
 var currentTab = 'cet4';
 var currentFreq = 'all';
@@ -350,47 +351,54 @@ function getFilteredWords() {
 
 // Use Youdao TTS API for reliable playback on all browsers (WeChat, Safari, etc.)
 // Returns MP3 audio directly — no SpeechSynthesis dependency
-function ttsUrl(word) {
-  return 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=0';
-}
-
-var currentAudio = null;
+// TTS: multiple sources for reliability
+var ttsSources = [
+  function(en){ return 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0'; },
+  function(en){ return 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q=' + encodeURIComponent(en) + '&tl=en'; }
+];
+var ttsIdx = 0;
 
 function doSpeak(en, onEnd) {
-  // Stop any currently playing audio
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   speechSynth.cancel();
+  var audioEl = document.getElementById('ttsAudio');
+  // Stop current playback
+  audioEl.pause();
+  audioEl.removeAttribute('src');
+  audioEl.load();
 
-  var audio = new Audio(ttsUrl(en));
-  audio.volume = 1;
-  currentAudio = audio;
+  ttsIdx = 0;
+  function tryNext(){
+    if (ttsIdx >= ttsSources.length) {
+      // All sources failed, try SpeechSynthesis as last resort
+      var u = new SpeechSynthesisUtterance(en);
+      u.lang = 'en-US'; u.rate = 0.9;
+      u.onend = function(){ if (onEnd) onEnd(); };
+      u.onerror = function(){ if (onEnd) onEnd(); };
+      speechSynth.speak(u);
+      setTimeout(function(){ if (onEnd) onEnd(); }, 5000);
+      return;
+    }
+    var url = ttsSources[ttsIdx](en);
+    ttsIdx++;
+    audioEl.src = url;
+    var p = audioEl.play();
+    if (p && p.then) {
+      p.catch(function(){ tryNext(); });
+    }
+  }
 
-  audio.onended = function(){
-    currentAudio = null;
-    if (onEnd) onEnd();
-  };
-  audio.onerror = function(){
-    currentAudio = null;
-    // Fallback to SpeechSynthesis if audio fails
-    var u = new SpeechSynthesisUtterance(en);
-    u.lang = 'en-US'; u.rate = 0.9;
-    u.onend = function(){ if (onEnd) onEnd(); };
-    u.onerror = function(){ if (onEnd) onEnd(); };
-    speechSynth.speak(u);
-    // Safety timeout
-    setTimeout(function(){ if (onEnd) onEnd(); }, 5000);
-  };
-  audio.play();
+  audioEl.onended = function(){ if (onEnd) onEnd(); };
+  audioEl.onerror = function(){ tryNext(); };
+  audioEl.onloadeddata = function(){};
+  tryNext();
   // Safety timeout
-  setTimeout(function(){
-    if (currentAudio === audio) { currentAudio = null; if (onEnd) onEnd(); }
-  }, 8000);
+  setTimeout(function(){ if (onEnd) onEnd(); }, 10000);
 }
 
 function speak(e, en) {
   e.stopPropagation();
   if (speakingWord === en) {
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    document.getElementById('ttsAudio').pause();
     speakingWord = null; render(currentPage); return;
   }
   speakingWord = en;
