@@ -386,9 +386,8 @@ function render(page) {
     words = words.filter(function(w){ return w.freq === currentFreq; });
   }
 
-  // Sort by frequency: high > mid > low
-  var freqOrder = {high:0, mid:1, low:2};
-  words.sort(function(a,b){ return (freqOrder[a.freq]||0) - (freqOrder[b.freq]||0); });
+  // Sort by exam count: highest count first
+  words.sort(function(a,b){ return (b.examCount||0) - (a.examCount||0); });
 
   var totalPages = Math.ceil(words.length / PAGE_SIZE);
   var start = (page - 1) * PAGE_SIZE;
