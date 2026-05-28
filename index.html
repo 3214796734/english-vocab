@@ -348,35 +348,54 @@ function getFilteredWords() {
   return words;
 }
 
-var voicesLoaded = false;
-speechSynth.onvoiceschanged = function(){ voicesLoaded = true; };
-// Preload voices
-speechSynth.getVoices();
+// Use Youdao TTS API for reliable playback on all browsers (WeChat, Safari, etc.)
+// Returns MP3 audio directly — no SpeechSynthesis dependency
+function ttsUrl(word) {
+  return 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(word) + '&type=0';
+}
 
-function doSpeak(en) {
+var currentAudio = null;
+
+function doSpeak(en, onEnd) {
+  // Stop any currently playing audio
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   speechSynth.cancel();
-  var u = new SpeechSynthesisUtterance(en);
-  u.lang = 'en-US'; u.rate = 0.9; u.volume = 1;
-  // Chrome Android bug: onend often doesn't fire, use timeout fallback
-  var timeout;
-  u.onstart = function(){ clearTimeout(timeout); };
-  u.onend = function(){ clearTimeout(timeout); };
-  u.onerror = function(){ clearTimeout(timeout); };
-  timeout = setTimeout(function(){
-    speechSynth.cancel();
-  }, en.length * 150 + 2000);
-  speechSynth.speak(u);
-  return {utterance: u, timeout: timeout};
+
+  var audio = new Audio(ttsUrl(en));
+  audio.volume = 1;
+  currentAudio = audio;
+
+  audio.onended = function(){
+    currentAudio = null;
+    if (onEnd) onEnd();
+  };
+  audio.onerror = function(){
+    currentAudio = null;
+    // Fallback to SpeechSynthesis if audio fails
+    var u = new SpeechSynthesisUtterance(en);
+    u.lang = 'en-US'; u.rate = 0.9;
+    u.onend = function(){ if (onEnd) onEnd(); };
+    u.onerror = function(){ if (onEnd) onEnd(); };
+    speechSynth.speak(u);
+    // Safety timeout
+    setTimeout(function(){ if (onEnd) onEnd(); }, 5000);
+  };
+  audio.play();
+  // Safety timeout
+  setTimeout(function(){
+    if (currentAudio === audio) { currentAudio = null; if (onEnd) onEnd(); }
+  }, 8000);
 }
 
 function speak(e, en) {
   e.stopPropagation();
-  if (speakingWord === en) { speechSynth.cancel(); speakingWord = null; render(currentPage); return; }
+  if (speakingWord === en) {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    speakingWord = null; render(currentPage); return;
+  }
   speakingWord = en;
   render(currentPage);
-  var r = doSpeak(en);
-  r.utterance.onend = function(){ speakingWord = null; render(currentPage); };
-  r.utterance.onerror = function(){ speakingWord = null; render(currentPage); };
+  doSpeak(en, function(){ speakingWord = null; render(currentPage); });
 }
 
 // Study Mode
@@ -421,13 +440,9 @@ function speakStudy() {
   var w = studyWords[studyIndex];
   var btn = document.getElementById('studySpeakBtn');
   btn.classList.add('speaking'); btn.textContent = '🔊';
-  var r = doSpeak(w.en);
-  r.utterance.onend = function(){ btn.classList.remove('speaking'); btn.textContent = '🔈'; };
-  r.utterance.onerror = function(){ btn.classList.remove('speaking'); btn.textContent = '⚠️'; };
-  // Safety timeout: reset button after max duration
-  setTimeout(function(){
-    if (btn.classList.contains('speaking')) { btn.classList.remove('speaking'); btn.textContent = '🔈'; }
-  }, w.en.length * 150 + 3000);
+  doSpeak(w.en, function(){
+    btn.classList.remove('speaking'); btn.textContent = '🔈';
+  });
 }
 
 function openStudy(index) {
