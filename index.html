@@ -348,17 +348,35 @@ function getFilteredWords() {
   return words;
 }
 
+var voicesLoaded = false;
+speechSynth.onvoiceschanged = function(){ voicesLoaded = true; };
+// Preload voices
+speechSynth.getVoices();
+
+function doSpeak(en) {
+  speechSynth.cancel();
+  var u = new SpeechSynthesisUtterance(en);
+  u.lang = 'en-US'; u.rate = 0.9; u.volume = 1;
+  // Chrome Android bug: onend often doesn't fire, use timeout fallback
+  var timeout;
+  u.onstart = function(){ clearTimeout(timeout); };
+  u.onend = function(){ clearTimeout(timeout); };
+  u.onerror = function(){ clearTimeout(timeout); };
+  timeout = setTimeout(function(){
+    speechSynth.cancel();
+  }, en.length * 150 + 2000);
+  speechSynth.speak(u);
+  return {utterance: u, timeout: timeout};
+}
+
 function speak(e, en) {
   e.stopPropagation();
-  speechSynth.cancel();
-  if (speakingWord === en) { speakingWord = null; render(currentPage); return; }
-  var u = new SpeechSynthesisUtterance(en);
-  u.lang = 'en-US'; u.rate = 0.85;
-  u.onend = function(){ speakingWord = null; render(currentPage); };
-  u.onerror = function(){ speakingWord = null; render(currentPage); };
+  if (speakingWord === en) { speechSynth.cancel(); speakingWord = null; render(currentPage); return; }
   speakingWord = en;
   render(currentPage);
-  speechSynth.speak(u);
+  var r = doSpeak(en);
+  r.utterance.onend = function(){ speakingWord = null; render(currentPage); };
+  r.utterance.onerror = function(){ speakingWord = null; render(currentPage); };
 }
 
 // Study Mode
@@ -401,23 +419,15 @@ function prevWord() {
 
 function speakStudy() {
   var w = studyWords[studyIndex];
-  speechSynth.cancel();
-  var u = new SpeechSynthesisUtterance(w.en);
-  u.lang = 'en-US'; u.rate = 0.85;
-  u.onstart = function(){
-    var btn = document.getElementById('studySpeakBtn');
-    btn.classList.add('speaking'); btn.textContent = '🔊';
-  };
-  u.onend = function(){
-    var btn = document.getElementById('studySpeakBtn');
-    btn.classList.remove('speaking'); btn.textContent = '🔈';
-  };
-  u.onerror = function(){
-    // Mobile may fail silently — show fallback
-    var btn = document.getElementById('studySpeakBtn');
-    btn.classList.remove('speaking'); btn.textContent = '🔈';
-  };
-  speechSynth.speak(u);
+  var btn = document.getElementById('studySpeakBtn');
+  btn.classList.add('speaking'); btn.textContent = '🔊';
+  var r = doSpeak(w.en);
+  r.utterance.onend = function(){ btn.classList.remove('speaking'); btn.textContent = '🔈'; };
+  r.utterance.onerror = function(){ btn.classList.remove('speaking'); btn.textContent = '⚠️'; };
+  // Safety timeout: reset button after max duration
+  setTimeout(function(){
+    if (btn.classList.contains('speaking')) { btn.classList.remove('speaking'); btn.textContent = '🔈'; }
+  }, w.en.length * 150 + 3000);
 }
 
 function openStudy(index) {
