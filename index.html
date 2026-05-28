@@ -353,6 +353,7 @@ function getFilteredWords() {
 // Returns MP3 audio directly — no SpeechSynthesis dependency
 // TTS: multiple sources for reliability
 var ttsSources = [
+  function(en){ return 'https://fanyi.baidu.com/gettts?lan=en&text=' + encodeURIComponent(en) + '&spd=3'; },
   function(en){ return 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0'; },
   function(en){ return 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q=' + encodeURIComponent(en) + '&tl=en'; }
 ];
