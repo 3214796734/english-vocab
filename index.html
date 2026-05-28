@@ -222,7 +222,7 @@ body{
 
 <div class="footer">点击词汇进入学习模式 · 键盘 ← → 翻页 · Esc 退出</div>
 
-<audio id="ttsAudio" preload="auto" style="position:fixed;bottom:10px;right:10px;z-index:9999;display:none" controls></audio>
+<audio id="ttsAudio" preload="auto" style="position:fixed;bottom:0;left:0;width:100%;z-index:9999;background:#fff;padding:8px;border-top:2px solid #667eea;display:none" controls></audio>
 <script src="data.js?v=7"></script>
 <script>
 var currentTab = 'cet4';
@@ -371,26 +371,22 @@ function doSpeak(en, onEnd) {
   function done(){
     if (audioTimer) { clearTimeout(audioTimer); audioTimer = null; }
     a.onended = null; a.onerror = null;
-    a.pause(); a.style.display = 'none';
     if (onEnd) onEnd();
+    // Keep controls visible for a moment then hide
+    setTimeout(function(){ a.style.display = 'none'; }, 3000);
   }
 
   a.onended = done;
   a.onerror = done;
   a.play();
 
-  audioTimer = setTimeout(done, 3500);
+  audioTimer = setTimeout(done, 5000);
 }
 
 function speak(e, en) {
   e.stopPropagation();
-  if (speakingWord === en) {
-    speechSynth.cancel();
-    speakingWord = null; render(currentPage); return;
-  }
-  speakingWord = en;
-  render(currentPage);
-  doSpeak(en, function(){ speakingWord = null; render(currentPage); });
+  speechSynth.cancel();
+  doSpeak(en, function(){});
 }
 
 // Study Mode
@@ -433,11 +429,7 @@ function prevWord() {
 
 function speakStudy() {
   var w = studyWords[studyIndex];
-  var btn = document.getElementById('studySpeakBtn');
-  btn.classList.add('speaking'); btn.textContent = '🔊';
-  doSpeak(w.en, function(){
-    btn.classList.remove('speaking'); btn.textContent = '🔈';
-  });
+  doSpeak(w.en, function(){});
 }
 
 function openStudy(index) {
