@@ -368,19 +368,16 @@ function doSpeak(en, onEnd) {
   a.style.display = 'block';
   a.volume = 1;
 
-  function done(){
-    if (audioTimer) { clearTimeout(audioTimer); audioTimer = null; }
-    a.onended = null; a.onerror = null;
-    if (onEnd) onEnd();
-    // Keep controls visible for a moment then hide
-    setTimeout(function(){ a.style.display = 'none'; }, 3000);
-  }
-
-  a.onended = done;
-  a.onerror = done;
+  // Don't auto-hide — let user control playback
+  a.onended = function(){ if (onEnd) onEnd(); };
+  a.onerror = function(){ /* keep visible, user can retry */ };
   a.play();
 
-  audioTimer = setTimeout(done, 5000);
+  // Auto-hide after 15s
+  audioTimer = setTimeout(function(){
+    a.style.display = 'none';
+    if (onEnd) onEnd();
+  }, 15000);
 }
 
 function speak(e, en) {
