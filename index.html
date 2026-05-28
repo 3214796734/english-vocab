@@ -356,37 +356,61 @@ function getFilteredWords() {
 // Returns MP3 audio directly — no SpeechSynthesis dependency
 // TTS: multiple sources for reliability
 var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-var currentAudio = null;
+var voicesReady = false;
+
+// Preload voices on first user interaction
+function loadVoices() {
+  if (voicesReady) return;
+  var voices = speechSynth.getVoices();
+  if (voices.length > 0) { voicesReady = true; return; }
+  speechSynth.onvoiceschanged = function(){
+    if (speechSynth.getVoices().length > 0) voicesReady = true;
+  };
+}
+document.addEventListener('click', loadVoices, {once: true});
+document.addEventListener('touchstart', loadVoices, {once: true});
+// Also try immediately
+speechSynth.getVoices();
 
 function doSpeak(en, onEnd) {
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   speechSynth.cancel();
 
-  // Try external TTS (works on desktop & normal browsers)
-  var url = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0';
-  var a = new Audio(url);
-  a.volume = 1;
-  currentAudio = a;
-  a.onended = function(){ currentAudio = null; if (onEnd) onEnd(); };
-  a.onerror = function(){
-    currentAudio = null;
-    // Fallback to SpeechSynthesis
-    var u = new SpeechSynthesisUtterance(en);
-    u.lang = 'en-US'; u.rate = 0.9;
-    u.onend = function(){ if (onEnd) onEnd(); };
-    u.onerror = function(){ if (onEnd) onEnd(); };
-    speechSynth.speak(u);
-    setTimeout(function(){ if (onEnd) onEnd(); }, 5000);
+  var u = new SpeechSynthesisUtterance(en);
+  u.lang = 'en-US';
+  u.rate = 0.9;
+  u.volume = 1;
+
+  // Chrome Android bug: need to set voice explicitly
+  var voices = speechSynth.getVoices();
+  var enVoice = null;
+  for (var i = 0; i < voices.length; i++) {
+    if (voices[i].lang.indexOf('en') === 0) { enVoice = voices[i]; break; }
+  }
+  if (enVoice) u.voice = enVoice;
+
+  var done = false;
+  function finish() { if (!done) { done = true; speechSynth.cancel(); if (onEnd) onEnd(); } }
+
+  u.onstart = function(){ /* speech started */ };
+  u.onend = function(){ finish(); };
+  u.onerror = function(e){
+    // If SpeechSynthesis fails, try audio element
+    speechSynth.cancel();
+    var a = new Audio('https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0');
+    a.volume = 1;
+    a.onended = function(){ finish(); };
+    a.onerror = function(){ finish(); };
+    a.play().catch(function(){ finish(); });
   };
-  var p = a.play();
-  if (p && p.then) { p.catch(function(){ a.onerror(); }); }
-  setTimeout(function(){ if (onEnd) onEnd(); }, 10000);
+
+  speechSynth.speak(u);
+  setTimeout(function(){ finish(); }, 8000);
 }
 
 function speak(e, en) {
   e.stopPropagation();
   if (speakingWord === en) {
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    speechSynth.cancel();
     speakingWord = null; render(currentPage); return;
   }
   speakingWord = en;
