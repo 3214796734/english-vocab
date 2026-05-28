@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英语四六级词汇学习</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  min-height:100vh;
+}
+
+.header{
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(255,255,255,0.2);
+  padding:30px 0 0;
+  text-align:center;
+  color:#fff;
+}
+.header h1{font-size:2rem;margin-bottom:6px;letter-spacing:2px;}
+.header p{font-size:0.95rem;opacity:0.85;margin-bottom:20px;}
+
+.tabs{display:flex;justify-content:center;gap:6px;padding:0 20px;}
+.tab{
+  padding:12px 40px;border:none;
+  background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);
+  cursor:pointer;border-radius:10px 10px 0 0;font-size:1rem;
+  font-weight:600;transition:all 0.25s;letter-spacing:1px;
+}
+.tab:hover{background:rgba(255,255,255,0.25);color:#fff;}
+.tab.active{background:#fff;color:#667eea;}
+
+.container{max-width:1100px;margin:0 auto;padding:24px;}
+
+.stats-bar{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:20px;}
+.stat{
+  background:rgba(255,255,255,0.15);backdrop-filter:blur(6px);
+  border-radius:12px;padding:14px 28px;color:#fff;text-align:center;
+}
+.stat-num{font-size:1.8rem;font-weight:700;}
+.stat-label{font-size:0.85rem;opacity:0.8;margin-top:2px;}
+
+.toolbar{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;}
+.search-wrap{position:relative;flex:1;min-width:240px;max-width:500px;}
+.search-wrap input{
+  width:100%;padding:12px 44px 12px 18px;
+  border:2px solid transparent;border-radius:30px;
+  font-size:1rem;background:#fff;outline:none;transition:all 0.25s;
+}
+.search-wrap input:focus{border-color:#667eea;box-shadow:0 0 0 4px rgba(102,126,234,0.2);}
+.search-wrap .search-icon{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:#999;pointer-events:none;}
+
+.filter-btn{
+  padding:10px 24px;border:2px solid rgba(255,255,255,0.5);
+  background:transparent;color:#fff;border-radius:30px;cursor:pointer;
+  font-size:0.9rem;font-weight:600;transition:all 0.25s;white-space:nowrap;
+}
+.filter-btn:hover{border-color:#fff;background:rgba(255,255,255,0.15);}
+.filter-btn.active{background:#fff;color:#667eea;border-color:#fff;}
+
+.word-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.word-card{
+  background:#fff;border-radius:14px;padding:20px 22px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.1);transition:transform 0.2s,box-shadow 0.2s;
+  display:flex;flex-direction:column;gap:8px;
+}
+.word-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,0.15);}
+
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.card-en-wrap{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+.card-en{
+  font-size:1.3rem;font-weight:700;color:#2d3748;line-height:1.4;word-break:break-word;
+}
+.speak-btn{
+  flex-shrink:0;width:32px;height:32px;border:none;
+  background:#ebf4ff;color:#3182ce;border-radius:50%;cursor:pointer;
+  font-size:1rem;transition:all 0.2s;display:flex;align-items:center;justify-content:center;
+}
+.speak-btn:hover{background:#bee3f8;transform:scale(1.1);}
+.speak-btn.speaking{background:#3182ce;color:#fff;animation:pulse 0.8s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+
+.card-zh{font-size:1rem;color:#4a5568;line-height:1.5;}
+.card-simple{
+  font-size:0.85rem;color:#718096;line-height:1.5;
+  padding:8px 12px;background:#f7fafc;border-radius:8px;
+  border-left:3px solid #667eea;
+}
+.card-simple::before{content:'📖 ';}
+
+.badges{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
+.badge{font-size:0.72rem;padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap;letter-spacing:0.5px;}
+.badge-cet4{background:#ebf4ff;color:#3182ce;}
+.badge-cet6{background:#faf5ff;color:#805ad5;}
+.badge-high{background:#fff5f5;color:#e53e3e;}
+.badge-mid{background:#fffaf0;color:#dd6b20;}
+.badge-low{background:#f0fff4;color:#38a169;}
+
+.empty{text-align:center;color:rgba(255,255,255,0.8);padding:60px 20px;}
+.empty-icon{font-size:3rem;margin-bottom:12px;}
+.empty-text{font-size:1.1rem;}
+
+.footer{text-align:center;padding:30px;color:rgba(255,255,255,0.5);font-size:0.85rem;}
+
+.pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:24px;flex-wrap:wrap;}
+.page-btn{
+  padding:8px 16px;border:2px solid rgba(255,255,255,0.5);
+  background:transparent;color:#fff;border-radius:8px;cursor:pointer;
+  font-size:0.9rem;font-weight:600;transition:all 0.2s;
+}
+.page-btn:hover:not(:disabled){border-color:#fff;background:rgba(255,255,255,0.15);}
+.page-btn:disabled{opacity:0.4;cursor:default;}
+.page-btn.active{background:#fff;color:#667eea;border-color:#fff;}
+.page-info{color:rgba(255,255,255,0.8);font-size:0.9rem;padding:0 8px;}
+
+@media(max-width:700px){
+  .tab{padding:10px 20px;font-size:0.88rem;}
+  .word-grid{grid-template-columns:1fr;}
+  .stats-bar{gap:12px;}
+  .stat{padding:10px 18px;}
+  .stat-num{font-size:1.3rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>英语四六级词汇学习</h1>
+  <p>CET-4 &amp; CET-6 Vocabulary with Pronunciation</p>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('cet4')">CET-4 四级 (1239词)</button>
+    <button class="tab" onclick="switchTab('cet6')">CET-6 六级 (1004词)</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-num" id="totalCount">0</div><div class="stat-label">总词汇</div></div>
+    <div class="stat"><div class="stat-num" id="highCount">0</div><div class="stat-label">高频</div></div>
+    <div class="stat"><div class="stat-num" id="midCount">0</div><div class="stat-label">中频</div></div>
+    <div class="stat"><div class="stat-num" id="lowCount">0</div><div class="stat-label">低频</div></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="搜索英文 / 中文…" oninput="render(1)">
+      <span class="search-icon">🔍</span>
+    </div>
+    <button class="filter-btn active" data-freq="all" onclick="setFreq('all',this)">全部</button>
+    <button class="filter-btn" data-freq="high" onclick="setFreq('high',this)">高频</button>
+    <button class="filter-btn" data-freq="mid" onclick="setFreq('mid',this)">中频</button>
+    <button class="filter-btn" data-freq="low" onclick="setFreq('low',this)">低频</button>
+  </div>
+
+  <div class="word-grid" id="wordGrid"></div>
+  <div class="empty" id="emptyState" style="display:none;">
+    <div class="empty-icon">📭</div>
+    <div class="empty-text">没找到匹配的词汇，试试其他搜索词</div>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<div class="footer">CET-4 / CET-6 Vocabulary Reference &mdash; Click 🔊 to listen</div>
+
+<script src="data.js"></script>
+<script>
+// STATE
+let currentTab = 'cet4';
+let currentFreq = 'all';
+let currentPage = 1;
+const PAGE_SIZE = 50;
+let speechSynth = window.speechSynthesis;
+let speakingWord = null;
+
+// Simple English explanation templates for common words
+const simpleTemplates = {
+  "abandon":"to leave behind or give up completely",
+  "ability":"the power or skill to do something",
+  "abroad":"in or to a foreign country",
+  "absence":"the state of being away or not present",
+  "absent":"not present in a place",
+  "absolute":"total and complete, without any limits",
+  "absorb":"to take in liquid, heat, or light",
+  "abstract":"based on ideas, not physical things",
+  "abundant":"more than enough; in large quantities",
+  "abuse":"to use something in a bad or harmful way",
+  "academic":"relating to education and schools",
+  "accelerate":"to go faster or make faster",
+  "accent":"a way of pronouncing words from a region",
+  "accept":"to take what someone gives you",
+  "access":"the right to enter or use something",
+  "accident":"something bad that happens by chance",
+  "accommodation":"a place to live or stay",
+  "accompany":"to go somewhere with someone",
+  "accomplish":"to succeed in doing something",
+  "account":"a record of money; a report",
+  "accountant":"a person who keeps financial records",
+  "accurate":"exactly right; without mistakes",
+  "accuse":"to say someone did something wrong",
+  "achieve":"to reach a goal by working hard",
+  "achievement":"something good you have done",
+  "acknowledge":"to accept something is true",
+  "acquire":"to get or gain over time",
+  "adapt":"to change to fit a new situation",
+  "addict":"someone who can't stop doing something",
+  "addition":"the act of adding something",
+  "adequate":"enough for what you need",
+  "adjust":"to make small changes to fit better",
+  "administration":"the process of managing something",
+  "admire":"to respect and like very much",
+  "admission":"permission to enter; saying something is true",
+  "admit":"to agree something bad is true",
+  "adopt":"to start using a new method; take a child legally",
+  "adult":"a person who is fully grown",
+  "advance":"to move forward or make progress",
+  "advanced":"modern and well developed",
+  "advantage":"something that helps you do better",
+  "adventure":"an exciting and sometimes risky experience",
+  "advertise":"to tell people about a product to sell it",
+  "advertisement":"a notice that tells people about a product",
+  "advice":"an opinion about what someone should do",
+  "advise":"to tell someone what they should do",
+  "affair":"an event or situation, often private",
+  "affect":"to cause a change or influence",
+  "affection":"a feeling of liking or loving",
+  "afford":"to have enough money to pay for",
+  "afterward":"at a later time",
+  "agency":"a business that provides a service",
+  "agenda":"a list of things to discuss",
+  "agent":"a person who represents someone else",
+  "aggressive":"ready to attack or fight",
+  "agreement":"a promise made by two or more people",
+  "agriculture":"the practice of farming",
+  "aid":"help or support",
+  "aircraft":"any machine that can fly",
+  "alarm":"a loud warning sound",
+  "alcohol":"a drink that can make people drunk",
+  "alert":"watching carefully",
+  "allocate":"to give for a specific purpose",
+  "allowance":"money given regularly",
+  "ally":"a country or person that helps you",
+  "alongside":"next to or together with",
+  "alter":"to make something different",
+  "alternative":"another way or choice",
+  "altitude":"the height above sea level",
+  "amateur":"someone who does an activity for fun",
+  "amaze":"to surprise very much",
+  "ambassador":"an official who represents a country",
+  "ambition":"a strong desire to achieve something",
+  "ambitious":"wanting very much to be successful",
+  "amount":"how much there is of something",
+  "amuse":"to make someone smile or laugh",
+  "analysis":"the careful study of something",
+  "analyze":"to study carefully to understand",
+  "ancestor":"a person in your family from long ago",
+  "anchor":"a heavy object that stops a boat from moving",
+  "ancient":"very old; from a long time ago",
+  "angle":"a way of looking at something",
+  "anniversary":"a date you remember a special event",
+  "announce":"to tell people publicly",
+  "annoy":"to make someone a little angry",
+  "annual":"happening once every year",
+  "anxiety":"a feeling of worry and nervousness",
+  "anxious":"worried; wanting something very much",
+  "apart":"not together; separated",
+  "apartment":"a set of rooms for living in",
+  "apologize":"to say sorry",
+  "apology":"words saying you are sorry",
+  "apparent":"easy to see or understand",
+  "appeal":"to make a serious request; to be attractive",
+  "appetite":"the feeling of wanting to eat",
+  "appliance":"a machine used in the home",
+  "application":"a formal request; a computer program",
+  "apply":"to ask for formally; to use",
+  "appointment":"a planned time to meet someone",
+  "appreciate":"to be thankful for something good",
+  "approach":"to come near; a way of dealing with something",
+  "appropriate":"right for a situation",
+  "approval":"official agreement",
+  "approve":"to officially agree to",
+  "architect":"a person who designs buildings",
+  "architecture":"the art of designing buildings",
+  "argue":"to disagree and talk angrily",
+  "argument":"a disagreement; a reason for an idea",
+  "arise":"to happen or start to exist",
+  "arrange":"to plan or organize",
+  "arrest":"when police take someone away",
+  "arrival":"the act of coming to a place",
+  "article":"a piece of writing; a thing",
+  "artificial":"made by people, not natural",
+  "artist":"a person who creates art",
+  "ashamed":"feeling bad about something you did",
+  "aspect":"one part of a situation",
+  "assemble":"to bring together; put parts together",
+  "assess":"to judge the value of something",
+  "asset":"something valuable you have",
+  "assign":"to give someone a job to do",
+  "assist":"to help someone",
+  "assistance":"help or support",
+  "associate":"to connect things in your mind",
+  "association":"a group with a common purpose",
+  "assume":"to think something is true without proof",
+  "atmosphere":"the feeling of a place; air around Earth",
+  "attach":"to join things together",
+  "attempt":"to try to do something hard",
+  "attend":"to be present at an event",
+  "attention":"careful thought given to something",
+  "attitude":"how you think and feel about something",
+  "attract":"to make people want to come",
+  "attractive":"nice to look at; interesting",
+  "audience":"people watching or listening",
+  "author":"the person who wrote something",
+  "authority":"the power to make decisions",
+  "automatic":"working by itself without human control",
+  "available":"ready to be used or easy to get",
+  "avenue":"a wide road; a way of doing something",
+  "average":"normal or typical; in the middle",
+  "avoid":"to stay away from something bad",
+  "awake":"not sleeping",
+  "award":"a prize for doing something well",
+  "aware":"knowing that something exists",
+  "awful":"very bad or unpleasant",
+  "awkward":"uncomfortable; not smooth",
+};
+
+function getSimple(en) {
+  var key = en.toLowerCase();
+  if (simpleTemplates[key]) return simpleTemplates[key];
+  return '';
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  currentFreq = 'all';
+  currentPage = 1;
+  document.querySelectorAll('.tab').forEach(function(t,i){ t.classList.toggle('active', i===(tab==='cet4'?0:1)); });
+  document.querySelectorAll('.filter-btn').forEach(function(b,i){ b.classList.toggle('active', i===0); });
+  document.getElementById('searchInput').value = '';
+  render(1);
+}
+
+function setFreq(freq, btn) {
+  currentFreq = freq;
+  currentPage = 1;
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  render(1);
+}
+
+function getWords() {
+  return currentTab === 'cet4' ? cet4Words : cet6Words;
+}
+
+function speak(e, en) {
+  e.stopPropagation();
+  speechSynth.cancel();
+  if (speakingWord === en) {
+    speakingWord = null;
+    render(currentPage);
+    return;
+  }
+  var u = new SpeechSynthesisUtterance(en);
+  u.lang = 'en-US';
+  u.rate = 0.85;
+  u.onend = function(){ speakingWord = null; render(currentPage); };
+  u.onerror = function(){ speakingWord = null; render(currentPage); };
+  speakingWord = en;
+  render(currentPage);
+  speechSynth.speak(u);
+}
+
+function render(page) {
+  currentPage = page;
+  var search = document.getElementById('searchInput').value.trim().toLowerCase();
+  var words = getWords();
+
+  if (search) {
+    words = words.filter(function(w){ return w.en.toLowerCase().indexOf(search)!==-1 || w.zh.indexOf(search)!==-1; });
+  }
+
+  if (currentFreq !== 'all') {
+    words = words.filter(function(w){ return w.freq === currentFreq; });
+  }
+
+  // Sort by frequency: high > mid > low
+  var freqOrder = {high:0, mid:1, low:2};
+  words.sort(function(a,b){ return (freqOrder[a.freq]||0) - (freqOrder[b.freq]||0); });
+
+  var totalPages = Math.ceil(words.length / PAGE_SIZE);
+  var start = (page - 1) * PAGE_SIZE;
+  var pageWords = words.slice(start, start + PAGE_SIZE);
+
+  var grid = document.getElementById('wordGrid');
+  var empty = document.getElementById('emptyState');
+
+  if (pageWords.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+    var isCet4 = currentTab === 'cet4';
+    var levelBadge = isCet4 ? '<span class="badge badge-cet4">CET-4</span>' : '<span class="badge badge-cet6">CET-6</span>';
+
+    grid.innerHTML = pageWords.map(function(w){
+      var freqBadge = '';
+      if (w.freq === 'high') freqBadge = '<span class="badge badge-high">高频</span>';
+      else if (w.freq === 'mid') freqBadge = '<span class="badge badge-mid">中频</span>';
+      else freqBadge = '<span class="badge badge-low">低频</span>';
+
+      var simple = w.simple || getSimple(w.en);
+      var simpleHtml = simple ? '<div class="card-simple">' + simple + '</div>' : '';
+
+      var isSpeaking = speakingWord === w.en;
+      var speakClass = isSpeaking ? 'speak-btn speaking' : 'speak-btn';
+      var speakIcon = isSpeaking ? '🔊' : '🔈';
+      var safeEn = w.en.replace(/'/g, "\\'");
+
+      return '<div class="word-card">' +
+        '<div class="card-top">' +
+          '<div class="card-en-wrap">' +
+            '<button class="' + speakClass + '" onclick="speak(event,\'' + safeEn + '\')" title="试听发音">' + speakIcon + '</button>' +
+            '<div class="card-en">' + w.en + '</div>' +
+          '</div>' +
+          '<div class="badges">' + levelBadge + freqBadge + '</div>' +
+        '</div>' +
+        '<div class="card-zh">' + w.zh + '</div>' +
+        simpleHtml +
+      '</div>';
+    }).join('');
+  }
+
+  // Pagination
+  var pag = document.getElementById('pagination');
+  if (totalPages <= 1) {
+    pag.innerHTML = '';
+  } else {
+    var html = '<button class="page-btn" onclick="render(' + (page-1) + ')" ' + (page<=1?'disabled':'') + '>上一页</button>';
+    html += '<span class="page-info">' + page + ' / ' + totalPages + '</span>';
+    for (var i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= page-2 && i <= page+2)) {
+        html += '<button class="page-btn' + (i===page?' active':'') + '" onclick="render(' + i + ')">' + i + '</button>';
+      } else if (i === page-3 || i === page+3) {
+        html += '<span class="page-info">…</span>';
+      }
+    }
+    html += '<button class="page-btn" onclick="render(' + (page+1) + ')" ' + (page>=totalPages?'disabled':'') + '>下一页</button>';
+    pag.innerHTML = html;
+  }
+
+  // Stats
+  var allWords = getWords();
+  document.getElementById('totalCount').textContent = allWords.length;
+  document.getElementById('highCount').textContent = allWords.filter(function(w){return w.freq==='high';}).length;
+  document.getElementById('midCount').textContent = allWords.filter(function(w){return w.freq==='mid';}).length;
+  document.getElementById('lowCount').textContent = allWords.filter(function(w){return w.freq==='low';}).length;
+}
+
+// Initial render
+render(1);
+</script>
+
+</body>
+</html>
