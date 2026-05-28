@@ -171,6 +171,10 @@ body{
   </div>
 </div>
 
+<div id="wechatTip" style="display:none;background:#fff3cd;color:#856404;text-align:center;padding:10px;font-size:0.9rem;margin:12px 24px 0;border-radius:8px;">
+  微信内无法播放音频 👉 点击右上角 ··· 选择<strong>「在浏览器中打开」</strong>即可听到发音
+</div>
+
 <div class="container">
   <div class="stats-bar">
     <div class="stat"><div class="stat-num" id="totalCount">0</div><div class="stat-label">总词汇</div></div>
@@ -351,45 +355,31 @@ function getFilteredWords() {
 // Use Youdao TTS API for reliable playback on all browsers (WeChat, Safari, etc.)
 // Returns MP3 audio directly — no SpeechSynthesis dependency
 // TTS: multiple sources for reliability
-// Primary: local MP3 files (same origin, works everywhere incl. WeChat)
-// Fallback: external TTS APIs
-var ttsSources = [
-  function(en){ return 'audio/' + en + '.mp3'; },
-  function(en){ return 'https://fanyi.baidu.com/gettts?lan=en&text=' + encodeURIComponent(en) + '&spd=3'; },
-  function(en){ return 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0'; }
-];
-var ttsIdx = 0;
-
+var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 var currentAudio = null;
 
 function doSpeak(en, onEnd) {
-  speechSynth.cancel();
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  speechSynth.cancel();
 
-  ttsIdx = 0;
-  function tryNext(){
-    if (ttsIdx >= ttsSources.length) {
-      // All failed, try SpeechSynthesis
-      var u = new SpeechSynthesisUtterance(en);
-      u.lang = 'en-US'; u.rate = 0.9;
-      u.onend = function(){ if (onEnd) onEnd(); };
-      u.onerror = function(){ if (onEnd) onEnd(); };
-      speechSynth.speak(u);
-      setTimeout(function(){ if (onEnd) onEnd(); }, 5000);
-      return;
-    }
-    var url = ttsSources[ttsIdx](en);
-    ttsIdx++;
-    var a = new Audio();
-    a.src = url;
-    a.volume = 1;
-    currentAudio = a;
-    a.onended = function(){ currentAudio = null; if (onEnd) onEnd(); };
-    a.onerror = function(){ currentAudio = null; tryNext(); };
-    var p = a.play();
-    if (p && p.then) { p.catch(function(){ tryNext(); }); }
-  }
-  tryNext();
+  // Try external TTS (works on desktop & normal browsers)
+  var url = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0';
+  var a = new Audio(url);
+  a.volume = 1;
+  currentAudio = a;
+  a.onended = function(){ currentAudio = null; if (onEnd) onEnd(); };
+  a.onerror = function(){
+    currentAudio = null;
+    // Fallback to SpeechSynthesis
+    var u = new SpeechSynthesisUtterance(en);
+    u.lang = 'en-US'; u.rate = 0.9;
+    u.onend = function(){ if (onEnd) onEnd(); };
+    u.onerror = function(){ if (onEnd) onEnd(); };
+    speechSynth.speak(u);
+    setTimeout(function(){ if (onEnd) onEnd(); }, 5000);
+  };
+  var p = a.play();
+  if (p && p.then) { p.catch(function(){ a.onerror(); }); }
   setTimeout(function(){ if (onEnd) onEnd(); }, 10000);
 }
 
@@ -529,6 +519,9 @@ function render(page) {
   document.getElementById('midCount').textContent = allWords.filter(function(w){return w.freq==='mid';}).length;
   document.getElementById('lowCount').textContent = allWords.filter(function(w){return w.freq==='low';}).length;
 }
+
+// Show WeChat tip
+if (isWeChat) { document.getElementById('wechatTip').style.display = 'block'; }
 
 render(1);
 </script>
