@@ -218,7 +218,7 @@ body{
 
 <div class="footer">点击词汇进入学习模式 · 键盘 ← → 翻页 · Esc 退出</div>
 
-<audio id="ttsAudio" style="display:none" preload="auto"></audio>
+<audio id="ttsAudio" style="display:none" preload="auto" crossorigin="anonymous"></audio>
 <script src="data.js?v=4"></script>
 <script>
 var currentTab = 'cet4';
@@ -352,17 +352,18 @@ function getFilteredWords() {
 // Use Youdao TTS API for reliable playback on all browsers (WeChat, Safari, etc.)
 // Returns MP3 audio directly — no SpeechSynthesis dependency
 // TTS: multiple sources for reliability
+// Primary: local MP3 files (same origin, works everywhere incl. WeChat)
+// Fallback: external TTS APIs
 var ttsSources = [
+  function(en){ return 'audio/' + en + '.mp3'; },
   function(en){ return 'https://fanyi.baidu.com/gettts?lan=en&text=' + encodeURIComponent(en) + '&spd=3'; },
-  function(en){ return 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0'; },
-  function(en){ return 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q=' + encodeURIComponent(en) + '&tl=en'; }
+  function(en){ return 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0'; }
 ];
 var ttsIdx = 0;
 
 function doSpeak(en, onEnd) {
   speechSynth.cancel();
   var audioEl = document.getElementById('ttsAudio');
-  // Stop current playback
   audioEl.pause();
   audioEl.removeAttribute('src');
   audioEl.load();
