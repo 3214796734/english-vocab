@@ -166,7 +166,7 @@ body{
 
 <div class="footer">CET-4 / CET-6 Vocabulary Reference &mdash; Click 🔊 to listen</div>
 
-<script src="data.js"></script>
+<script src="data.js?v=2"></script>
 <script>
 // STATE
 let currentTab = 'cet4';
@@ -405,13 +405,8 @@ function render(page) {
     var levelBadge = isCet4 ? '<span class="badge badge-cet4">CET-4</span>' : '<span class="badge badge-cet6">CET-6</span>';
 
     grid.innerHTML = pageWords.map(function(w){
-      var freqBadge = '';
-      if (w.freq === 'high') freqBadge = '<span class="badge badge-high">高频</span>';
-      else if (w.freq === 'mid') freqBadge = '<span class="badge badge-mid">中频</span>';
-      else freqBadge = '<span class="badge badge-low">低频</span>';
-
       var examCount = w.examCount || 0;
-      var countBadge = examCount ? '<span class="badge badge-count" title="历年真题出现次数">📋 ' + examCount + '次</span>' : '';
+      var countBadge = examCount ? '<span class="badge badge-count" title="历年真题出现次数">📋' + examCount + '次</span>' : '';
 
       var simple = w.simple || getSimple(w.en);
       var simpleHtml = simple ? '<div class="card-simple">' + simple + '</div>' : '';
@@ -427,7 +422,7 @@ function render(page) {
             '<button class="' + speakClass + '" onclick="speak(event,\'' + safeEn + '\')" title="试听发音">' + speakIcon + '</button>' +
             '<div class="card-en">' + w.en + '</div>' +
           '</div>' +
-          '<div class="badges">' + levelBadge + freqBadge + countBadge + '</div>' +
+          '<div class="badges">' + levelBadge + countBadge + '</div>' +
         '</div>' +
         '<div class="card-zh">' + w.zh + '</div>' +
         simpleHtml +
