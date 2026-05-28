@@ -211,7 +211,7 @@ body{
     <div class="study-zh" id="studyZh"></div>
     <div class="study-simple" id="studySimple"></div>
     <div class="study-count" id="studyCount"></div>
-    <button class="study-speak" id="studySpeakBtn" onclick="speakStudy()">🔈</button>
+    <a class="study-speak" id="studySpeakBtn" href="#" target="_blank">🔈</a>
     <div class="study-nav">
       <button class="nav-btn" id="prevBtn" onclick="prevWord()">← 上一个</button>
       <span class="study-progress" id="studyProgress"></span>
@@ -222,15 +222,12 @@ body{
 
 <div class="footer">点击词汇进入学习模式 · 键盘 ← → 翻页 · Esc 退出</div>
 
-<audio id="ttsAudio" preload="auto" style="position:fixed;bottom:0;left:0;width:100%;z-index:9999;background:#fff;padding:8px;border-top:2px solid #667eea;display:none" controls></audio>
-<script src="data.js?v=7"></script>
+<script src="data.js?v=8"></script>
 <script>
 var currentTab = 'cet4';
 var currentFreq = 'all';
 var currentPage = 1;
 var PAGE_SIZE = 50;
-var speechSynth = window.speechSynthesis;
-var speakingWord = null;
 var studyWords = [];
 var studyIndex = 0;
 
@@ -353,38 +350,7 @@ function getFilteredWords() {
   return words;
 }
 
-// Use Youdao TTS API for reliable playback on all browsers (WeChat, Safari, etc.)
-// Returns MP3 audio directly — no SpeechSynthesis dependency
-// TTS: multiple sources for reliability
 var isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-var audioTimer = null;
-
-function doSpeak(en, onEnd) {
-  speechSynth.cancel();
-  if (audioTimer) clearTimeout(audioTimer);
-
-  var a = document.getElementById('ttsAudio');
-  a.src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0';
-  a.style.display = 'block';
-  a.volume = 1;
-
-  // Don't auto-hide — let user control playback
-  a.onended = function(){ if (onEnd) onEnd(); };
-  a.onerror = function(){ /* keep visible, user can retry */ };
-  a.play();
-
-  // Auto-hide after 15s
-  audioTimer = setTimeout(function(){
-    a.style.display = 'none';
-    if (onEnd) onEnd();
-  }, 15000);
-}
-
-function speak(e, en) {
-  e.stopPropagation();
-  speechSynth.cancel();
-  doSpeak(en, function(){});
-}
 
 // Study Mode
 function startStudy() {
@@ -410,10 +376,8 @@ function showStudyWord() {
   document.getElementById('studyProgress').textContent = (studyIndex+1) + ' / ' + studyWords.length;
   document.getElementById('prevBtn').disabled = studyIndex === 0;
   document.getElementById('nextBtn').disabled = studyIndex >= studyWords.length - 1;
-  // Don't auto-speak — mobile requires user gesture
   var btn = document.getElementById('studySpeakBtn');
-  btn.classList.remove('speaking');
-  btn.textContent = '🔈';
+  btn.href = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
 }
 
 function nextWord() {
@@ -422,11 +386,6 @@ function nextWord() {
 
 function prevWord() {
   if (studyIndex > 0) { studyIndex--; showStudyWord(); }
-}
-
-function speakStudy() {
-  var w = studyWords[studyIndex];
-  doSpeak(w.en, function(){});
 }
 
 function openStudy(index) {
@@ -476,9 +435,9 @@ function render(page) {
       var examCount = w.examCount || 0;
       var countBadge = examCount ? '<span class="badge badge-count">📋' + examCount + '次</span>' : '';
       var globalIndex = start + i;
-      var safeEn = w.en.replace(/'/g, "\\'");
+      var ttsUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
       return '<div class="word-row" onclick="openStudy(' + globalIndex + ')">' +
-        '<button class="row-speak" onclick="speak(event,\'' + safeEn + '\')">🔊</button>' +
+        '<a class="row-speak" href="' + ttsUrl + '" target="_blank" onclick="event.stopPropagation()">🔊</a>' +
         '<span class="row-en">' + w.en + '</span>' +
         '<span class="row-zh">' + w.zh + '</span>' +
         '<div class="row-badges">' + levelBadge + countBadge + '</div>' +
