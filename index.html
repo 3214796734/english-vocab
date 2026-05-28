@@ -218,8 +218,7 @@ body{
 
 <div class="footer">点击词汇进入学习模式 · 键盘 ← → 翻页 · Esc 退出</div>
 
-<audio id="ttsAudio" style="display:none" preload="auto" crossorigin="anonymous"></audio>
-<script src="data.js?v=4"></script>
+<script src="data.js?v=5"></script>
 <script>
 var currentTab = 'cet4';
 var currentFreq = 'all';
@@ -361,17 +360,16 @@ var ttsSources = [
 ];
 var ttsIdx = 0;
 
+var currentAudio = null;
+
 function doSpeak(en, onEnd) {
   speechSynth.cancel();
-  var audioEl = document.getElementById('ttsAudio');
-  audioEl.pause();
-  audioEl.removeAttribute('src');
-  audioEl.load();
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
 
   ttsIdx = 0;
   function tryNext(){
     if (ttsIdx >= ttsSources.length) {
-      // All sources failed, try SpeechSynthesis as last resort
+      // All failed, try SpeechSynthesis
       var u = new SpeechSynthesisUtterance(en);
       u.lang = 'en-US'; u.rate = 0.9;
       u.onend = function(){ if (onEnd) onEnd(); };
@@ -382,25 +380,23 @@ function doSpeak(en, onEnd) {
     }
     var url = ttsSources[ttsIdx](en);
     ttsIdx++;
-    audioEl.src = url;
-    var p = audioEl.play();
-    if (p && p.then) {
-      p.catch(function(){ tryNext(); });
-    }
+    var a = new Audio();
+    a.src = url;
+    a.volume = 1;
+    currentAudio = a;
+    a.onended = function(){ currentAudio = null; if (onEnd) onEnd(); };
+    a.onerror = function(){ currentAudio = null; tryNext(); };
+    var p = a.play();
+    if (p && p.then) { p.catch(function(){ tryNext(); }); }
   }
-
-  audioEl.onended = function(){ if (onEnd) onEnd(); };
-  audioEl.onerror = function(){ tryNext(); };
-  audioEl.onloadeddata = function(){};
   tryNext();
-  // Safety timeout
   setTimeout(function(){ if (onEnd) onEnd(); }, 10000);
 }
 
 function speak(e, en) {
   e.stopPropagation();
   if (speakingWord === en) {
-    document.getElementById('ttsAudio').pause();
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     speakingWord = null; render(currentPage); return;
   }
   speakingWord = en;
