@@ -222,7 +222,8 @@ body{
 
 <div class="footer">点击词汇进入学习模式 · 键盘 ← → 翻页 · Esc 退出</div>
 
-<script src="data.js?v=6"></script>
+<audio id="ttsAudio" preload="auto" style="position:fixed;bottom:10px;right:10px;z-index:9999;display:none" controls></audio>
+<script src="data.js?v=7"></script>
 <script>
 var currentTab = 'cet4';
 var currentFreq = 'all';
@@ -362,20 +363,15 @@ function doSpeak(en, onEnd) {
   speechSynth.cancel();
   if (audioTimer) clearTimeout(audioTimer);
 
-  var url = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0';
-  var a = new Audio();
-  a.src = url;
+  var a = document.getElementById('ttsAudio');
+  a.src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0';
+  a.style.display = 'block';
   a.volume = 1;
-  a.preload = 'auto';
-  // Must be in DOM for some mobile browsers
-  a.style.display = 'none';
-  document.body.appendChild(a);
 
   function done(){
     if (audioTimer) { clearTimeout(audioTimer); audioTimer = null; }
     a.onended = null; a.onerror = null;
-    a.pause();
-    if (a.parentNode) a.parentNode.removeChild(a);
+    a.pause(); a.style.display = 'none';
     if (onEnd) onEnd();
   }
 
