@@ -363,19 +363,25 @@ function doSpeak(en, onEnd) {
   if (audioTimer) clearTimeout(audioTimer);
 
   var url = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(en) + '&type=0';
-  var a = new Audio(url);
+  var a = new Audio();
+  a.src = url;
   a.volume = 1;
   a.preload = 'auto';
+  // Must be in DOM for some mobile browsers
+  a.style.display = 'none';
+  document.body.appendChild(a);
 
   function done(){
     if (audioTimer) { clearTimeout(audioTimer); audioTimer = null; }
-    a.pause(); a.src = ''; a.onended = null; a.onerror = null;
+    a.onended = null; a.onerror = null;
+    a.pause();
+    if (a.parentNode) a.parentNode.removeChild(a);
     if (onEnd) onEnd();
   }
 
   a.onended = done;
-  a.onerror = function(e){ done(); };
-  a.play().catch(function(e){ done(); });
+  a.onerror = done;
+  a.play();
 
   audioTimer = setTimeout(done, 3500);
 }
