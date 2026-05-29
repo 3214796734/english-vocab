@@ -211,7 +211,7 @@ body{
     <div class="study-zh" id="studyZh"></div>
     <div class="study-simple" id="studySimple"></div>
     <div class="study-count" id="studyCount"></div>
-    <a class="study-speak" id="studySpeakBtn" href="#" target="_blank">🔈</a>
+    <span class="study-speak" id="studySpeakBtn" onclick="var w=studyWords[studyIndex];document.getElementById('ttsFrame').src='https://dict.youdao.com/dictvoice?audio='+encodeURIComponent(w.en)+'&type=0'">🔈</span>
     <div class="study-nav">
       <button class="nav-btn" id="prevBtn" onclick="prevWord()">← 上一个</button>
       <span class="study-progress" id="studyProgress"></span>
@@ -222,7 +222,8 @@ body{
 
 <div class="footer">点击词汇进入学习模式 · 键盘 ← → 翻页 · Esc 退出</div>
 
-<script src="data.js?v=8"></script>
+<iframe id="ttsFrame" style="display:none;width:0;height:0;border:0" src="about:blank"></iframe>
+<script src="data.js?v=9"></script>
 <script>
 var currentTab = 'cet4';
 var currentFreq = 'all';
@@ -376,8 +377,6 @@ function showStudyWord() {
   document.getElementById('studyProgress').textContent = (studyIndex+1) + ' / ' + studyWords.length;
   document.getElementById('prevBtn').disabled = studyIndex === 0;
   document.getElementById('nextBtn').disabled = studyIndex >= studyWords.length - 1;
-  var btn = document.getElementById('studySpeakBtn');
-  btn.href = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
 }
 
 function nextWord() {
@@ -437,7 +436,7 @@ function render(page) {
       var globalIndex = start + i;
       var ttsUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
       return '<div class="word-row" onclick="openStudy(' + globalIndex + ')">' +
-        '<a class="row-speak" href="' + ttsUrl + '" target="_blank" onclick="event.stopPropagation()">🔊</a>' +
+        '<span class="row-speak" onclick="event.stopPropagation();var f=document.getElementById(\'ttsFrame\');f.src=\'' + ttsUrl + '\'">🔊</span>' +
         '<span class="row-en">' + w.en + '</span>' +
         '<span class="row-zh">' + w.zh + '</span>' +
         '<div class="row-badges">' + levelBadge + countBadge + '</div>' +
