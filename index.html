@@ -574,18 +574,38 @@ function startGame() {
 }
 
 function showGameStart() {
+  window._gameMode = 'quiz';
   var html = '<div class="game-start">';
   html += '<h3>🎮 闯关模式</h3>';
-  html += '<p style="color:#718096;font-size:0.85rem">选择难度开始挑战</p>';
-  html += '<div class="diff-btns">';
+  html += '<p style="color:#718096;font-size:0.85rem">选择玩法</p>';
+
+  // Mode selection
+  html += '<div class="diff-btns" style="margin-bottom:4px">';
+  html += '<button class="diff-btn sel" onclick="selMode(this,\'quiz\')">🎯 选择题<br><small>英→中 · 中→英</small></button>';
+  html += '<button class="diff-btn" onclick="selMode(this,\'speed\')">⚡ 闪电战<br><small>60秒极限挑战</small></button>';
+  html += '<button class="diff-btn" onclick="selMode(this,\'spell\')">✍️ 拼写挑战<br><small>看中文写英文</small></button>';
+  html += '</div>';
+
+  // Difficulty for quiz mode
+  html += '<div id="diffArea"><div class="diff-btns">';
   html += '<button class="diff-btn sel" onclick="selDiff(this,\'easy\')">🌱 简单<br><small>高频词 · 5条命</small></button>';
   html += '<button class="diff-btn" onclick="selDiff(this,\'normal\')">🔥 普通<br><small>中频词 · 3条命</small></button>';
   html += '<button class="diff-btn" onclick="selDiff(this,\'hard\')">💀 困难<br><small>低频词 · 1条命</small></button>';
-  html += '</div>';
-  html += '<button class="start-btn" onclick="beginGame(\'easy\')">开始挑战 →</button>';
+  html += '</div></div>';
+
+  html += '<button class="start-btn" onclick="beginGame()">开始挑战 →</button>';
   html += '</div>';
   document.getElementById('gameCard').innerHTML = html;
   window._selDiff = 'easy';
+}
+
+function selMode(btn, mode) {
+  window._gameMode = mode;
+  var btns = document.querySelectorAll('#gameCard .diff-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('sel');
+  btn.classList.add('sel');
+  // Hide difficulty for speed/spell
+  document.getElementById('diffArea').style.display = (mode === 'quiz') ? 'block' : 'none';
 }
 
 function selDiff(btn, diff) {
@@ -597,22 +617,18 @@ function selDiff(btn, diff) {
 
 function beginGame() {
   var diff = window._selDiff || 'easy';
+  var mode = window._gameMode || 'quiz';
 
-  // Filter by freq
   var all = getWords();
-  if (diff === 'easy') {
-    all = all.filter(function(w){ return w.freq === 'high'; });
-  } else if (diff === 'hard') {
-    all = all.filter(function(w){ return w.freq === 'low'; });
+  if (mode === 'quiz') {
+    if (diff === 'easy') all = all.filter(function(w){ return w.freq === 'high'; });
+    else if (diff === 'hard') all = all.filter(function(w){ return w.freq === 'low'; });
   }
+  if (all.length < 4) all = getWords();
 
-  if (all.length < 4) { all = getWords(); }
-
-  // Sort by examCount, pick top 60
   all.sort(function(a,b){ return (b.examCount||0) - (a.examCount||0); });
-  gameWords = all.slice(0, 60);
+  gameWords = all.slice(0, mode === 'speed' ? 200 : 60);
 
-  // Shuffle
   for (var i = gameWords.length - 1; i > 0; i--) {
     var j = Math.floor(Math.random() * (i + 1));
     var tmp = gameWords[i]; gameWords[i] = gameWords[j]; gameWords[j] = tmp;
@@ -621,6 +637,9 @@ function beginGame() {
   gameIndex = 0; gameScore = 0; gameStreak = 0; gameBestStreak = 0;
   gameLives = diff === 'easy' ? 5 : (diff === 'hard' ? 1 : 3);
   gameLevel = 1; gameWrongs = [];
+
+  if (mode === 'speed') { startSpeedMode(); return; }
+  if (mode === 'spell') { showSpellQuestion(); return; }
   showQuestion();
 }
 
@@ -631,7 +650,7 @@ function showQuestion() {
   gameAnswered = false;
 
   // Pick question type
-  var types = ['en2zh', 'en2zh', 'zh2en', 'listen'];
+  var types = ['en2zh', 'en2zh', 'zh2en'];
   gameQType = types[Math.floor(Math.random() * types.length)];
 
   var w = gameWords[gameIndex];
@@ -664,16 +683,6 @@ function showQuestion() {
     document.getElementById('gameMain').textContent = w.zh;
     document.getElementById('gameSub').textContent = '';
     typeLabel = w.en;
-  } else if (gameQType === 'listen') {
-    document.getElementById('gameQType').textContent = '🔊 听发音，选出对应的中文';
-    document.getElementById('gameMain').textContent = '🔊 听到的是什么？';
-    document.getElementById('gameSub').textContent = '点击下方 ▶ 重播';
-    document.getElementById('gameSub').style.cursor = 'pointer';
-    document.getElementById('gameSub').onclick = function(){
-      document.getElementById('ttsFrame').src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
-    };
-    document.getElementById('ttsFrame').src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
-    typeLabel = w.zh;
   }
 
   // Generate options
@@ -790,7 +799,9 @@ function showGameEnd() {
   html += '<div class="stat-item"><div class="stat-val">' + gameScore + '</div><div class="stat-lbl">总得分</div></div>';
   html += '<div class="stat-item"><div class="stat-val">' + accuracy + '%</div><div class="stat-lbl">正确率</div></div>';
   html += '<div class="stat-item"><div class="stat-val">🔥 ' + gameBestStreak + '</div><div class="stat-lbl">最高连击</div></div>';
-  html += '<div class="stat-item"><div class="stat-val">🏰 ' + gameLevel + '关</div><div class="stat-lbl">到达关卡</div></div>';
+  if (window._gameMode !== 'spell') {
+    html += '<div class="stat-item"><div class="stat-val">🏰 ' + gameLevel + '关</div><div class="stat-lbl">到达关卡</div></div>';
+  }
   html += '</div>';
 
   if (gameWrongs.length > 0) {
@@ -808,8 +819,199 @@ function showGameEnd() {
   document.getElementById('gameCard').innerHTML = html;
 }
 
+// --- Speed Mode ---
+var speedTimeLeft = 60, speedTimer = null;
+function startSpeedMode() {
+  speedTimeLeft = 60;
+  gameScore = 0; gameStreak = 0; gameBestStreak = 0;
+  gameWrongs = [];
+  gameIndex = 0;
+
+  var html = '';
+  html += '<div class="game-header">';
+  html += '<span class="game-score">⭐ ' + gameScore + '</span>';
+  html += '<span style="color:#e53e3e;font-weight:700;font-size:1.2rem" id="speedClock">⏱ 60s</span>';
+  html += '<span style="font-weight:600">🔥' + gameStreak + '</span>';
+  html += '</div>';
+  html += '<div class="game-word-main" id="speedWord" style="font-size:2.2rem">---</div>';
+  html += '<div class="game-word-sub">选择正确的中文意思</div>';
+  html += '<div class="game-options" id="speedOptions"></div>';
+  document.getElementById('gameCard').innerHTML = html;
+
+  speedTimer = setInterval(function(){
+    speedTimeLeft--;
+    document.getElementById('speedClock').textContent = '⏱ ' + speedTimeLeft + 's';
+    if (speedTimeLeft <= 0) { speedEnd(); }
+  }, 1000);
+
+  speedNextQ();
+}
+
+function speedNextQ() {
+  if (speedTimeLeft <= 0) { speedEnd(); return; }
+  var w = gameWords[gameIndex % gameWords.length];
+  gameIndex++;
+
+  document.getElementById('speedWord').textContent = w.en;
+  document.getElementById('ttsFrame').src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
+
+  var correct = w.zh;
+  var wrongs = [];
+  while (wrongs.length < 3) {
+    var r = gameWords[Math.floor(Math.random() * gameWords.length)];
+    if (r.zh !== correct && wrongs.indexOf(r.zh) === -1) wrongs.push(r.zh);
+  }
+  var opts = wrongs.slice(); opts.push(correct);
+  for (var i = opts.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = opts[i]; opts[i] = opts[j]; opts[j] = tmp;
+  }
+  var lbls = ['A','B','C','D'];
+  document.getElementById('speedOptions').innerHTML = opts.map(function(o,i){
+    return '<button class="game-option" onclick="speedAnswer(this,\'' +
+      o.replace(/'/g,"\\'") + '\',\'' + correct.replace(/'/g,"\\'") + '\')">' +
+      '<span style="color:#a0aec0;font-size:0.7rem;margin-right:4px">'+lbls[i]+'</span>'+o+'</button>';
+  }).join('');
+}
+
+function speedAnswer(btn, chosen, correct) {
+  if (speedTimeLeft <= 0) return;
+  var w = gameWords[(gameIndex - 1) % gameWords.length];
+  var isCorrect = (chosen === correct);
+  if (isCorrect) {
+    btn.classList.add('correct');
+    gameScore += 10;
+    gameStreak++;
+    if (gameStreak > gameBestStreak) gameBestStreak = gameStreak;
+  } else {
+    btn.classList.add('wrong');
+    gameStreak = 0;
+    gameWrongs.push(w);
+    var btns = document.querySelectorAll('#speedOptions .game-option');
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].textContent.replace(/^[A-D]/,'') === correct) btns[i].classList.add('correct');
+    }
+  }
+  document.querySelector('#gameCard .game-score').textContent = '⭐ ' + gameScore;
+  document.querySelector('#gameCard span:last-child').textContent = '🔥' + gameStreak;
+  setTimeout(speedNextQ, 300);
+}
+
+function speedEnd() {
+  clearInterval(speedTimer);
+  var total = gameIndex;
+  var accuracy = total > 0 ? Math.round((total - gameWrongs.length) / total * 100) : 0;
+  var emoji = gameScore >= 300 ? '🏆' : (gameScore >= 150 ? '🎉' : '💪');
+  var msg = gameScore >= 300 ? '闪电侠！' : (gameScore >= 150 ? '不错的速度！' : '还可以更快！');
+  var html = '<div class="game-end">';
+  html += '<div style="font-size:3.5rem;margin-bottom:4px">' + emoji + '</div>';
+  html += '<h3>' + msg + '</h3>';
+  html += '<div class="stats">';
+  html += '<div class="stat-item"><div class="stat-val">' + gameScore + '</div><div class="stat-lbl">总得分</div></div>';
+  html += '<div class="stat-item"><div class="stat-val">' + accuracy + '%</div><div class="stat-lbl">正确率</div></div>';
+  html += '<div class="stat-item"><div class="stat-val">' + gameBestStreak + '</div><div class="stat-lbl">最高连击</div></div>';
+  html += '<div class="stat-item"><div class="stat-val">' + total + '</div><div class="stat-lbl">答题数</div></div>';
+  html += '</div>';
+  if (gameWrongs.length > 0) {
+    html += '<details style="margin:8px 0"><summary style="cursor:pointer;color:#667eea;font-weight:600">查看错题 (' + gameWrongs.length + ')</summary><div class="game-review">';
+    for (var i = 0; i < gameWrongs.length; i++) html += '<div class="rev-item"><span class="rev-en">' + gameWrongs[i].en + '</span><span class="rev-zh">' + gameWrongs[i].zh + '</span></div>';
+    html += '</div></details>';
+  }
+  html += '<button onclick="startSpeedMode()">🔄 再来一局</button> <button class="ghost" onclick="closeGame()">退出</button></div>';
+  document.getElementById('gameCard').innerHTML = html;
+}
+
+// --- Spell Mode ---
+var spellTimer = null, spellTimeLeft = 0;
+function showSpellQuestion() {
+  if (gameIndex >= gameWords.length) { showGameEnd(); return; }
+  gameAnswered = false;
+  var w = gameWords[gameIndex];
+
+  var html = '';
+  html += '<div class="game-header">';
+  html += '<span class="game-lives">' + hearts(gameLives) + '</span>';
+  html += '<span class="game-score">⭐ ' + gameScore + '</span>';
+  html += '</div>';
+  html += '<div class="game-progress-wrap"><div class="game-progress-bar" style="width:' + (gameIndex/gameWords.length*100) + '%"></div></div>';
+  html += '<div class="game-question-type">✍️ 输入对应的英文单词</div>';
+  html += '<div class="game-word-main" style="font-size:1.6rem;color:#4a5568">' + w.zh + '</div>';
+  if (gameStreak > 0) html += '<div style="color:#f59e0b;font-size:0.85rem;margin-bottom:6px">🔥 ' + gameStreak + ' 连击</div>';
+  // Show first letter hint
+  html += '<div style="color:#a0aec0;font-size:0.8rem;margin-bottom:8px">首字母: <b style="color:#667eea">' + w.en.charAt(0).toUpperCase() + '</b></div>';
+  html += '<input type="text" id="spellInput" autocomplete="off" autocapitalize="off" style="width:80%;padding:12px;border:2px solid #e2e8f0;border-radius:12px;font-size:1.1rem;text-align:center;outline:none;transition:all 0.2s" placeholder="输入英文..." onfocus="this.style.borderColor=\'#667eea\'">';
+  html += '<br><button class="start-btn" style="margin-top:10px" onclick="spellCheck()">确定 ✓</button>';
+  html += '<div id="spellResult" style="margin-top:8px;font-size:0.9rem;min-height:24px"></div>';
+  document.getElementById('gameCard').innerHTML = html;
+
+  spellTimeLeft = 8;
+  var timerBar = document.createElement('div');
+  timerBar.style.cssText = 'height:3px;background:#e53e3e;margin-top:8px;border-radius:2px;width:100%;transition:width 0.1s linear';
+  document.getElementById('gameCard').appendChild(timerBar);
+
+  spellTimer = setInterval(function(){
+    spellTimeLeft -= 0.05;
+    timerBar.style.width = Math.max(0, spellTimeLeft/8*100) + '%';
+    if (spellTimeLeft <= 0) { clearInterval(spellTimer); if (!gameAnswered) spellTimeUp(w); }
+  }, 50);
+
+  setTimeout(function(){
+    var inp = document.getElementById('spellInput');
+    if (inp) inp.focus();
+  }, 100);
+
+  // Enter key to submit
+  document.getElementById('spellInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') spellCheck(); });
+
+  document.getElementById('ttsFrame').src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
+}
+
+function spellCheck() {
+  if (gameAnswered) return;
+  gameAnswered = true;
+  clearInterval(spellTimer);
+  var w = gameWords[gameIndex];
+  var input = document.getElementById('spellInput').value.trim().toLowerCase();
+  var result = document.getElementById('spellResult');
+
+  if (input === w.en.toLowerCase()) {
+    result.innerHTML = '<span style="color:#38a169">✅ 正确！</span>';
+    gameScore += 10 + Math.max(1, Math.floor(spellTimeLeft * 2));
+    gameStreak++;
+    if (gameStreak > gameBestStreak) gameBestStreak = gameStreak;
+    if (gameStreak % 3 === 0 && gameLives < 5) gameLives++;
+  } else {
+    result.innerHTML = '<span style="color:#e53e3e">❌ 正确答案: <b>' + w.en + '</b></span>';
+    gameStreak = 0;
+    gameLives--;
+    gameWrongs.push(w);
+  }
+  document.getElementById('spellInput').disabled = true;
+
+  setTimeout(function(){
+    gameIndex++;
+    if (gameLives <= 0 || gameIndex >= gameWords.length) { showGameEnd(); }
+    else showSpellQuestion();
+  }, gameStreak > 0 ? 500 : 1000);
+}
+
+function spellTimeUp(w) {
+  gameAnswered = true;
+  gameStreak = 0;
+  gameLives--;
+  gameWrongs.push(w);
+  document.getElementById('spellResult').innerHTML = '<span style="color:#e53e3e">⏰ 时间到！正确答案: <b>' + w.en + '</b></span>';
+  setTimeout(function(){
+    gameIndex++;
+    if (gameLives <= 0 || gameIndex >= gameWords.length) showGameEnd();
+    else showSpellQuestion();
+  }, 1000);
+}
+
 function closeGame() {
   clearInterval(window._timerInterval);
+  clearInterval(speedTimer);
+  clearInterval(spellTimer);
   document.getElementById('gameOverlay').classList.remove('active');
 }
 
