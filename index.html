@@ -120,6 +120,55 @@ body{
 .study-speak:hover{background:#3182ce;color:#fff;transform:scale(1.1);}
 .study-speak.speaking{background:#3182ce;color:#fff;animation:pulse 0.8s infinite;}
 @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes pop{0%{transform:scale(0.8);opacity:0}50%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+
+/* Game overlay */
+.game-overlay{
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.8);z-index:200;justify-content:center;align-items:center;
+}
+.game-overlay.active{display:flex;}
+
+.game-card{
+  background:#fff;border-radius:20px;padding:32px;max-width:420px;width:92%;
+  text-align:center;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4);
+}
+.game-close{
+  position:absolute;top:10px;right:14px;border:none;background:none;
+  font-size:1.4rem;cursor:pointer;color:#a0aec0;z-index:10;
+}
+.game-close:hover{color:#4a5568;}
+
+.game-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.game-score{font-size:1.1rem;font-weight:700;color:#667eea;}
+.game-streak{font-size:0.9rem;color:#f59e0b;font-weight:600;}
+.game-progress-wrap{height:6px;background:#edf2f7;border-radius:3px;margin-bottom:20px;overflow:hidden;}
+.game-progress-bar{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:3px;transition:width 0.3s;}
+
+.game-word-en{font-size:2rem;font-weight:700;color:#2d3748;margin-bottom:6px;}
+.game-hint{font-size:0.8rem;color:#a0aec0;margin-bottom:16px;}
+
+.game-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.game-option{
+  padding:14px 10px;border:2px solid #e2e8f0;background:#fff;
+  border-radius:12px;cursor:pointer;font-size:0.95rem;font-weight:600;
+  color:#4a5568;transition:all 0.15s;min-height:48px;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+}
+.game-option:hover{background:#f7fafc;border-color:#667eea;}
+.game-option.correct{background:#c6f6d5;border-color:#38a169;color:#22543d;animation:pop 0.3s;}
+.game-option.wrong{background:#fed7d7;border-color:#e53e3e;color:#742a2a;animation:shake 0.4s;}
+
+.game-end{padding:20px 0;}
+.game-end .big{font-size:3rem;margin-bottom:8px;}
+.game-end h3{font-size:1.4rem;color:#2d3748;margin-bottom:4px;}
+.game-end p{color:#718096;font-size:0.9rem;margin-bottom:16px;}
+.game-end button{
+  padding:12px 32px;border:none;background:#667eea;color:#fff;
+  border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;
+}
+.game-end button:hover{background:#5a6fd6;}
 
 .study-nav{display:flex;justify-content:space-between;align-items:center;gap:16px;}
 .nav-btn{
@@ -193,6 +242,7 @@ body{
     <button class="filter-btn" data-freq="mid" onclick="setFreq('mid',this)">中频</button>
     <button class="filter-btn" data-freq="low" onclick="setFreq('low',this)">低频</button>
     <button class="mode-btn" onclick="startStudy()" title="进入逐词学习模式">📖 学习模式</button>
+    <button class="mode-btn" style="background:#f59e0b;border-color:#f59e0b" onclick="startGame()" title="闯关答题">🎮 闯关模式</button>
   </div>
 
   <div class="word-list" id="wordList"></div>
@@ -201,6 +251,21 @@ body{
     <div class="empty-text">没找到匹配的词汇</div>
   </div>
   <div class="pagination" id="pagination"></div>
+</div>
+
+<!-- Game Overlay -->
+<div class="game-overlay" id="gameOverlay">
+  <div class="game-card" id="gameCard">
+    <button class="game-close" onclick="closeGame()">✕</button>
+    <div class="game-header">
+      <span class="game-score" id="gameScore">⭐ 0</span>
+      <span class="game-streak" id="gameStreak">🔥 0 连击</span>
+    </div>
+    <div class="game-progress-wrap"><div class="game-progress-bar" id="gameProgress" style="width:0%"></div></div>
+    <div class="game-word-en" id="gameWord">---</div>
+    <div class="game-hint">选择正确的中文意思</div>
+    <div class="game-options" id="gameOptions"></div>
+  </div>
 </div>
 
 <!-- Study Mode Overlay -->
@@ -464,6 +529,117 @@ function render(page) {
   document.getElementById('highCount').textContent = allWords.filter(function(w){return w.freq==='high';}).length;
   document.getElementById('midCount').textContent = allWords.filter(function(w){return w.freq==='mid';}).length;
   document.getElementById('lowCount').textContent = allWords.filter(function(w){return w.freq==='low';}).length;
+}
+
+// Game mode
+var gameWords = [];
+var gameIndex = 0;
+var gameScore = 0;
+var gameStreak = 0;
+var gameAnswered = false;
+
+function startGame() {
+  gameWords = getFilteredWords();
+  if (gameWords.length < 4) return;
+  // Shuffle
+  for (var i = gameWords.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = gameWords[i]; gameWords[i] = gameWords[j]; gameWords[j] = tmp;
+  }
+  gameIndex = 0;
+  gameScore = 0;
+  gameStreak = 0;
+  gameAnswered = false;
+  document.getElementById('gameOverlay').classList.add('active');
+  showGameWord();
+}
+
+function closeGame() {
+  document.getElementById('gameOverlay').classList.remove('active');
+}
+
+function showGameWord() {
+  if (gameIndex >= gameWords.length) {
+    showGameEnd();
+    return;
+  }
+  gameAnswered = false;
+  var w = gameWords[gameIndex];
+  document.getElementById('gameWord').textContent = w.en;
+  document.getElementById('gameScore').textContent = '⭐ ' + gameScore;
+  document.getElementById('gameStreak').textContent = '🔥 ' + gameStreak + ' 连击';
+  document.getElementById('gameProgress').style.width = (gameIndex / gameWords.length * 100) + '%';
+
+  // Pick 4 options (1 correct, 3 random wrong)
+  var correctZh = w.zh;
+  var wrongs = [];
+  var pool = gameWords.concat(); // copy
+  while (wrongs.length < 3) {
+    var r = pool[Math.floor(Math.random() * pool.length)];
+    if (r.zh !== correctZh && wrongs.indexOf(r.zh) === -1) {
+      wrongs.push(r.zh);
+    }
+  }
+  var options = wrongs.slice();
+  options.push(correctZh);
+  // Shuffle options
+  for (var i = options.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = options[i]; options[i] = options[j]; options[j] = tmp;
+  }
+
+  var optHtml = options.map(function(opt){
+    return '<button class="game-option" onclick="answer(this,\'' +
+      opt.replace(/'/g, "\\'") + '\',\'' +
+      correctZh.replace(/'/g, "\\'") + '\')">' + opt + '</button>';
+  }).join('');
+  document.getElementById('gameOptions').innerHTML = optHtml;
+
+  // Play audio for the word
+  document.getElementById('ttsFrame').src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
+}
+
+function answer(btn, chosen, correct) {
+  if (gameAnswered) return;
+  gameAnswered = true;
+  var isCorrect = (chosen === correct);
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    gameScore += gameStreak >= 4 ? 20 : 10;
+    gameStreak++;
+  } else {
+    btn.classList.add('wrong');
+    gameStreak = 0;
+    // Highlight correct answer
+    var buttons = document.querySelectorAll('#gameOptions .game-option');
+    for (var i = 0; i < buttons.length; i++) {
+      if (buttons[i].textContent === correct) { buttons[i].classList.add('correct'); break; }
+    }
+  }
+
+  setTimeout(function(){
+    gameIndex++;
+    if (gameIndex >= gameWords.length) {
+      showGameEnd();
+    } else {
+      showGameWord();
+    }
+  }, 600);
+}
+
+function showGameEnd() {
+  var html = '<div class="game-end">';
+  if (gameScore >= 100) {
+    html += '<div class="big">🏆</div><h3>太棒了！</h3><p>得分: ' + gameScore + ' 分</p>';
+  } else if (gameScore >= 50) {
+    html += '<div class="big">🎉</div><h3>做得不错！</h3><p>得分: ' + gameScore + ' 分</p>';
+  } else {
+    html += '<div class="big">💪</div><h3>继续加油！</h3><p>得分: ' + gameScore + ' 分</p>';
+  }
+  html += '<button onclick="startGame()">🔄 再来一局</button> <button onclick="closeGame()">退出</button>';
+  html += '</div>';
+  document.getElementById('gameCard').innerHTML = html;
 }
 
 // Show WeChat tip
