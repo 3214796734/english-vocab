@@ -126,13 +126,14 @@ body{
 /* Game overlay */
 .game-overlay{
   display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,0.8);z-index:200;justify-content:center;align-items:center;
+  background:rgba(0,0,0,0.85);z-index:200;justify-content:center;align-items:center;
 }
 .game-overlay.active{display:flex;}
 
 .game-card{
-  background:#fff;border-radius:20px;padding:32px;max-width:420px;width:92%;
-  text-align:center;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.4);
+  background:#fff;border-radius:20px;padding:28px;max-width:440px;width:94%;
+  text-align:center;position:relative;
+  box-shadow:0 20px 60px rgba(0,0,0,0.4);overflow-y:auto;max-height:95vh;
 }
 .game-close{
   position:absolute;top:10px;right:14px;border:none;background:none;
@@ -140,35 +141,71 @@ body{
 }
 .game-close:hover{color:#4a5568;}
 
-.game-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.game-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;}
+.game-lives{font-size:1rem;}
 .game-score{font-size:1.1rem;font-weight:700;color:#667eea;}
-.game-streak{font-size:0.9rem;color:#f59e0b;font-weight:600;}
-.game-progress-wrap{height:6px;background:#edf2f7;border-radius:3px;margin-bottom:20px;overflow:hidden;}
+.game-level{font-size:0.8rem;background:#edf2f7;color:#4a5568;padding:3px 10px;border-radius:10px;font-weight:600;}
+.game-progress-wrap{height:5px;background:#edf2f7;border-radius:3px;margin-bottom:6px;overflow:hidden;}
 .game-progress-bar{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:3px;transition:width 0.3s;}
+.game-timer{height:3px;background:#e53e3e;margin-bottom:10px;border-radius:2px;transition:width 0.1s linear;width:100%;}
 
-.game-word-en{font-size:2rem;font-weight:700;color:#2d3748;margin-bottom:6px;}
-.game-hint{font-size:0.8rem;color:#a0aec0;margin-bottom:16px;}
-
-.game-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.game-option{
-  padding:14px 10px;border:2px solid #e2e8f0;background:#fff;
-  border-radius:12px;cursor:pointer;font-size:0.95rem;font-weight:600;
-  color:#4a5568;transition:all 0.15s;min-height:48px;
-  display:flex;align-items:center;justify-content:center;text-align:center;
+.game-question-type{
+  font-size:0.75rem;background:#ebf4ff;color:#3182ce;display:inline-block;
+  padding:3px 12px;border-radius:10px;margin-bottom:10px;
 }
-.game-option:hover{background:#f7fafc;border-color:#667eea;}
-.game-option.correct{background:#c6f6d5;border-color:#38a169;color:#22543d;animation:pop 0.3s;}
-.game-option.wrong{background:#fed7d7;border-color:#e53e3e;color:#742a2a;animation:shake 0.4s;}
+.game-word-main{font-size:1.8rem;font-weight:700;color:#2d3748;margin-bottom:4px;line-height:1.3;}
+.game-word-sub{font-size:0.85rem;color:#a0aec0;margin-bottom:14px;}
 
-.game-end{padding:20px 0;}
-.game-end .big{font-size:3rem;margin-bottom:8px;}
-.game-end h3{font-size:1.4rem;color:#2d3748;margin-bottom:4px;}
-.game-end p{color:#718096;font-size:0.9rem;margin-bottom:16px;}
+.game-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.game-option{
+  padding:12px 8px;border:2px solid #e2e8f0;background:#fff;
+  border-radius:12px;cursor:pointer;font-size:0.9rem;font-weight:600;
+  color:#4a5568;transition:all 0.12s;min-height:44px;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  position:relative;overflow:hidden;
+}
+.game-option:hover{background:#f0f4ff;border-color:#667eea;transform:translateY(-1px);}
+.game-option.correct{background:#c6f6d5!important;border-color:#38a169!important;color:#22543d!important;animation:pop 0.35s;}
+.game-option.wrong{background:#fed7d7!important;border-color:#e53e3e!important;color:#742a2a!important;animation:shake 0.4s;}
+.game-option:disabled{pointer-events:none;}
+
+/* Game start screen */
+.game-start{padding:10px 0;}
+.game-start h3{font-size:1.5rem;color:#2d3748;margin-bottom:4px;}
+.game-start .diff-btns{display:flex;gap:8px;justify-content:center;margin:16px 0;flex-wrap:wrap;}
+.game-start .diff-btn{
+  padding:10px 20px;border:2px solid #e2e8f0;background:#fff;
+  border-radius:12px;cursor:pointer;font-size:0.9rem;font-weight:600;
+  color:#4a5568;transition:all 0.2s;
+}
+.game-start .diff-btn:hover{border-color:#667eea;color:#667eea;}
+.game-start .diff-btn.sel{background:#667eea;color:#fff;border-color:#667eea;}
+.game-start .start-btn{
+  padding:12px 40px;border:none;background:#667eea;color:#fff;
+  border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:8px;
+}
+.game-start .start-btn:hover{background:#5a6fd6;}
+
+/* Game end + review */
+.game-end h3{font-size:1.4rem;color:#2d3748;margin:4px 0;}
+.game-end .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;text-align:center;}
+.game-end .stat-item{background:#f7fafc;padding:10px;border-radius:10px;}
+.game-end .stat-val{font-size:1.3rem;font-weight:700;color:#667eea;}
+.game-end .stat-lbl{font-size:0.75rem;color:#a0aec0;}
 .game-end button{
-  padding:12px 32px;border:none;background:#667eea;color:#fff;
-  border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;
+  padding:10px 24px;border:none;background:#667eea;color:#fff;
+  border-radius:10px;font-size:0.9rem;font-weight:600;cursor:pointer;margin:4px;
 }
 .game-end button:hover{background:#5a6fd6;}
+.game-end button.ghost{background:#fff;color:#667eea;border:2px solid #667eea;}
+.game-review{text-align:left;margin-top:8px;max-height:160px;overflow-y:auto;}
+.game-review .rev-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 8px;margin:2px 0;border-radius:8px;font-size:0.85rem;
+  background:#f7fafc;
+}
+.game-review .rev-en{font-weight:700;color:#2d3748;}
+.game-review .rev-zh{color:#4a5568;}
 
 .study-nav{display:flex;justify-content:space-between;align-items:center;gap:16px;}
 .nav-btn{
@@ -257,14 +294,7 @@ body{
 <div class="game-overlay" id="gameOverlay">
   <div class="game-card" id="gameCard">
     <button class="game-close" onclick="closeGame()">✕</button>
-    <div class="game-header">
-      <span class="game-score" id="gameScore">⭐ 0</span>
-      <span class="game-streak" id="gameStreak">🔥 0 连击</span>
-    </div>
-    <div class="game-progress-wrap"><div class="game-progress-bar" id="gameProgress" style="width:0%"></div></div>
-    <div class="game-word-en" id="gameWord">---</div>
-    <div class="game-hint">选择正确的中文意思</div>
-    <div class="game-options" id="gameOptions"></div>
+    <!-- Content filled by JS: start screen / question / end screen -->
   </div>
 </div>
 
@@ -532,114 +562,255 @@ function render(page) {
 }
 
 // Game mode
-var gameWords = [];
-var gameIndex = 0;
-var gameScore = 0;
-var gameStreak = 0;
-var gameAnswered = false;
+var gameWords = [], gameWrongs = [];
+var gameIndex = 0, gameScore = 0, gameStreak = 0, gameBestStreak = 0;
+var gameLives = 5, gameLevel = 1, gameAnswered = false;
+var gameTimer = null, gameTimeLeft = 0;
+var gameQType = ''; // 'en2zh' | 'zh2en' | 'listen'
 
 function startGame() {
-  gameWords = getFilteredWords();
-  if (gameWords.length < 4) return;
+  document.getElementById('gameOverlay').classList.add('active');
+  showGameStart();
+}
+
+function showGameStart() {
+  var html = '<div class="game-start">';
+  html += '<h3>🎮 闯关模式</h3>';
+  html += '<p style="color:#718096;font-size:0.85rem">选择难度开始挑战</p>';
+  html += '<div class="diff-btns">';
+  html += '<button class="diff-btn sel" onclick="selDiff(this,\'easy\')">🌱 简单<br><small>高频词 · 5条命</small></button>';
+  html += '<button class="diff-btn" onclick="selDiff(this,\'normal\')">🔥 普通<br><small>中频词 · 3条命</small></button>';
+  html += '<button class="diff-btn" onclick="selDiff(this,\'hard\')">💀 困难<br><small>低频词 · 1条命</small></button>';
+  html += '</div>';
+  html += '<button class="start-btn" onclick="beginGame(\'easy\')">开始挑战 →</button>';
+  html += '</div>';
+  document.getElementById('gameCard').innerHTML = html;
+  window._selDiff = 'easy';
+}
+
+function selDiff(btn, diff) {
+  window._selDiff = diff;
+  var btns = document.querySelectorAll('#gameCard .diff-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('sel');
+  btn.classList.add('sel');
+}
+
+function beginGame() {
+  var diff = window._selDiff || 'easy';
+
+  // Filter by freq
+  var all = getWords();
+  if (diff === 'easy') {
+    all = all.filter(function(w){ return w.freq === 'high'; });
+  } else if (diff === 'hard') {
+    all = all.filter(function(w){ return w.freq === 'low'; });
+  }
+
+  if (all.length < 4) { all = getWords(); }
+
+  // Sort by examCount, pick top 60
+  all.sort(function(a,b){ return (b.examCount||0) - (a.examCount||0); });
+  gameWords = all.slice(0, 60);
+
   // Shuffle
   for (var i = gameWords.length - 1; i > 0; i--) {
     var j = Math.floor(Math.random() * (i + 1));
     var tmp = gameWords[i]; gameWords[i] = gameWords[j]; gameWords[j] = tmp;
   }
-  gameIndex = 0;
-  gameScore = 0;
-  gameStreak = 0;
-  gameAnswered = false;
-  document.getElementById('gameOverlay').classList.add('active');
-  showGameWord();
+
+  gameIndex = 0; gameScore = 0; gameStreak = 0; gameBestStreak = 0;
+  gameLives = diff === 'easy' ? 5 : (diff === 'hard' ? 1 : 3);
+  gameLevel = 1; gameWrongs = [];
+  showQuestion();
 }
 
-function closeGame() {
-  document.getElementById('gameOverlay').classList.remove('active');
-}
-
-function showGameWord() {
-  if (gameIndex >= gameWords.length) {
-    showGameEnd();
-    return;
+function showQuestion() {
+  if (gameLives <= 0 || gameIndex >= gameWords.length) {
+    showGameEnd(); return;
   }
   gameAnswered = false;
-  var w = gameWords[gameIndex];
-  document.getElementById('gameWord').textContent = w.en;
-  document.getElementById('gameScore').textContent = '⭐ ' + gameScore;
-  document.getElementById('gameStreak').textContent = '🔥 ' + gameStreak + ' 连击';
-  document.getElementById('gameProgress').style.width = (gameIndex / gameWords.length * 100) + '%';
 
-  // Pick 4 options (1 correct, 3 random wrong)
-  var correctZh = w.zh;
+  // Pick question type
+  var types = ['en2zh', 'en2zh', 'zh2en', 'listen'];
+  gameQType = types[Math.floor(Math.random() * types.length)];
+
+  var w = gameWords[gameIndex];
+  var typeLabel = '';
+
+  // Build HTML
+  var html = '';
+  html += '<div class="game-header">';
+  html += '<span class="game-lives">' + hearts(gameLives) + '</span>';
+  html += '<span class="game-level">🏰 第' + gameLevel + '关</span>';
+  html += '<span class="game-score">⭐ ' + gameScore + '</span>';
+  html += '</div>';
+  html += '<div class="game-progress-wrap"><div class="game-progress-bar" id="gameProgress" style="width:' + (gameIndex/gameWords.length*100) + '%"></div></div>';
+  html += '<div id="gameTimerBar" class="game-timer" style="width:100%"></div>';
+  html += '<div class="game-question-type" id="gameQType"></div>';
+  html += '<div class="game-word-main" id="gameMain">---</div>';
+  html += '<div class="game-word-sub" id="gameSub"></div>';
+  html += '<div class="game-options" id="gameOptions"></div>';
+  document.getElementById('gameCard').innerHTML = html;
+
+  // Show question
+  if (gameQType === 'en2zh') {
+    document.getElementById('gameQType').textContent = '📖 选出正确的中文意思';
+    document.getElementById('gameMain').textContent = w.en;
+    document.getElementById('gameSub').textContent = '';
+    document.getElementById('ttsFrame').src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
+    typeLabel = w.zh;
+  } else if (gameQType === 'zh2en') {
+    document.getElementById('gameQType').textContent = '✏️ 选出对应的英文单词';
+    document.getElementById('gameMain').textContent = w.zh;
+    document.getElementById('gameSub').textContent = '';
+    typeLabel = w.en;
+  } else if (gameQType === 'listen') {
+    document.getElementById('gameQType').textContent = '🔊 听发音，选出对应的中文';
+    document.getElementById('gameMain').textContent = '🔊 听到的是什么？';
+    document.getElementById('gameSub').textContent = '点击下方 ▶ 重播';
+    document.getElementById('gameSub').style.cursor = 'pointer';
+    document.getElementById('gameSub').onclick = function(){
+      document.getElementById('ttsFrame').src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
+    };
+    document.getElementById('ttsFrame').src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
+    typeLabel = w.zh;
+  }
+
+  // Generate options
+  var correct = typeLabel;
   var wrongs = [];
-  var pool = gameWords.concat(); // copy
+  var pool = gameWords.concat();
   while (wrongs.length < 3) {
     var r = pool[Math.floor(Math.random() * pool.length)];
-    if (r.zh !== correctZh && wrongs.indexOf(r.zh) === -1) {
-      wrongs.push(r.zh);
+    var rText = gameQType === 'zh2en' ? r.en : r.zh;
+    if (rText !== correct && wrongs.indexOf(rText) === -1) {
+      wrongs.push(rText);
     }
   }
-  var options = wrongs.slice();
-  options.push(correctZh);
-  // Shuffle options
-  for (var i = options.length - 1; i > 0; i--) {
+  var opts = wrongs.slice(); opts.push(correct);
+  for (var i = opts.length - 1; i > 0; i--) {
     var j = Math.floor(Math.random() * (i + 1));
-    var tmp = options[i]; options[i] = options[j]; options[j] = tmp;
+    var tmp = opts[i]; opts[i] = opts[j]; opts[j] = tmp;
   }
 
-  var optHtml = options.map(function(opt){
-    return '<button class="game-option" onclick="answer(this,\'' +
-      opt.replace(/'/g, "\\'") + '\',\'' +
-      correctZh.replace(/'/g, "\\'") + '\')">' + opt + '</button>';
-  }).join('');
+  var optHtml = '';
+  var labels = ['A', 'B', 'C', 'D'];
+  for (var i = 0; i < opts.length; i++) {
+    optHtml += '<button class="game-option" onclick="answer(this,\'' +
+      opts[i].replace(/'/g, "\\'") + '\',\'' +
+      correct.replace(/'/g, "\\'") + '\')">' +
+      '<span style="color:#a0aec0;font-size:0.7rem;margin-right:4px">' + labels[i] + '</span>' +
+      opts[i] + '</button>';
+  }
   document.getElementById('gameOptions').innerHTML = optHtml;
 
-  // Play audio for the word
-  document.getElementById('ttsFrame').src = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(w.en) + '&type=0';
+  // Timer
+  var baseTime = gameLevel <= 3 ? 8 : (gameLevel <= 6 ? 6 : 4);
+  gameTimeLeft = baseTime;
+  var timerBar = document.getElementById('gameTimerBar');
+  var timerInterval = setInterval(function(){
+    gameTimeLeft -= 0.05;
+    var pct = Math.max(0, (gameTimeLeft / baseTime * 100));
+    timerBar.style.width = pct + '%';
+    if (gameTimeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (!gameAnswered) timeUp(correct);
+    }
+  }, 50);
+  window._timerInterval = timerInterval;
+
+  // Increase level every 10 questions
+  if (gameIndex > 0 && gameIndex % 10 === 0) gameLevel++;
+}
+
+function hearts(n) {
+  var s = ''; for (var i = 0; i < n; i++) s += '❤️'; return s;
 }
 
 function answer(btn, chosen, correct) {
   if (gameAnswered) return;
   gameAnswered = true;
+  clearInterval(window._timerInterval);
+
   var isCorrect = (chosen === correct);
+  var w = gameWords[gameIndex];
 
   if (isCorrect) {
     btn.classList.add('correct');
-    gameScore += gameStreak >= 4 ? 20 : 10;
+    var bonus = Math.max(1, Math.floor(gameTimeLeft * 2));
+    gameScore += 10 + bonus;
     gameStreak++;
+    if (gameStreak > gameBestStreak) gameBestStreak = gameStreak;
+    if (gameStreak % 5 === 0) gameLives = Math.min(5, gameLives + 1);
   } else {
     btn.classList.add('wrong');
     gameStreak = 0;
-    // Highlight correct answer
+    gameLives--;
+    gameWrongs.push(w);
+    // Highlight correct
     var buttons = document.querySelectorAll('#gameOptions .game-option');
     for (var i = 0; i < buttons.length; i++) {
-      if (buttons[i].textContent === correct) { buttons[i].classList.add('correct'); break; }
+      if (buttons[i].textContent.replace(/^[A-D]/,'') === correct) {
+        buttons[i].classList.add('correct');
+      }
     }
   }
 
   setTimeout(function(){
     gameIndex++;
-    if (gameIndex >= gameWords.length) {
-      showGameEnd();
-    } else {
-      showGameWord();
+    showQuestion();
+  }, isCorrect ? 400 : 900);
+}
+
+function timeUp(correct) {
+  gameAnswered = true;
+  gameStreak = 0;
+  gameLives--;
+  gameWrongs.push(gameWords[gameIndex]);
+  var buttons = document.querySelectorAll('#gameOptions .game-option');
+  for (var i = 0; i < buttons.length; i++) {
+    if (buttons[i].textContent.replace(/^[A-D]/,'') === correct) {
+      buttons[i].classList.add('correct');
     }
-  }, 600);
+  }
+  setTimeout(function(){ gameIndex++; showQuestion(); }, 900);
 }
 
 function showGameEnd() {
+  clearInterval(window._timerInterval);
+  var total = gameIndex;
+  var accuracy = total > 0 ? Math.round((total - gameWrongs.length) / total * 100) : 0;
+  var emoji = accuracy >= 90 ? '🏆' : (accuracy >= 70 ? '🎉' : (accuracy >= 50 ? '💪' : '📚'));
+  var msg = accuracy >= 90 ? '词汇大师！' : (accuracy >= 70 ? '做得不错！' : (accuracy >= 50 ? '继续加油！' : '多多练习！'));
+
   var html = '<div class="game-end">';
-  if (gameScore >= 100) {
-    html += '<div class="big">🏆</div><h3>太棒了！</h3><p>得分: ' + gameScore + ' 分</p>';
-  } else if (gameScore >= 50) {
-    html += '<div class="big">🎉</div><h3>做得不错！</h3><p>得分: ' + gameScore + ' 分</p>';
-  } else {
-    html += '<div class="big">💪</div><h3>继续加油！</h3><p>得分: ' + gameScore + ' 分</p>';
+  html += '<div style="font-size:3.5rem;margin-bottom:4px">' + emoji + '</div>';
+  html += '<h3>' + msg + '</h3>';
+  html += '<div class="stats">';
+  html += '<div class="stat-item"><div class="stat-val">' + gameScore + '</div><div class="stat-lbl">总得分</div></div>';
+  html += '<div class="stat-item"><div class="stat-val">' + accuracy + '%</div><div class="stat-lbl">正确率</div></div>';
+  html += '<div class="stat-item"><div class="stat-val">🔥 ' + gameBestStreak + '</div><div class="stat-lbl">最高连击</div></div>';
+  html += '<div class="stat-item"><div class="stat-val">🏰 ' + gameLevel + '关</div><div class="stat-lbl">到达关卡</div></div>';
+  html += '</div>';
+
+  if (gameWrongs.length > 0) {
+    html += '<details style="margin:8px 0"><summary style="cursor:pointer;color:#667eea;font-weight:600">查看错题 (' + gameWrongs.length + '个)</summary>';
+    html += '<div class="game-review">';
+    for (var i = 0; i < gameWrongs.length; i++) {
+      html += '<div class="rev-item"><span class="rev-en">' + gameWrongs[i].en + '</span><span class="rev-zh">' + gameWrongs[i].zh + '</span></div>';
+    }
+    html += '</div></details>';
   }
-  html += '<button onclick="startGame()">🔄 再来一局</button> <button onclick="closeGame()">退出</button>';
+
+  html += '<button onclick="beginGame()">🔄 再来一局</button>';
+  html += '<button class="ghost" onclick="closeGame()">退出</button>';
   html += '</div>';
   document.getElementById('gameCard').innerHTML = html;
+}
+
+function closeGame() {
+  clearInterval(window._timerInterval);
+  document.getElementById('gameOverlay').classList.remove('active');
 }
 
 // Show WeChat tip
